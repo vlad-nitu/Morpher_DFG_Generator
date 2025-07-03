@@ -26,6 +26,11 @@ int get_index(u64 va, int level) {
 
 // Perform a simulated page table walk
 u64 page_table_walk() {
+#ifdef CGRA_COMPILER
+    // This function is expected to be mapped by the CGRA compiler 
+    please_map_me();
+#endif
+
     int pml4_idx = get_index(va, 3);
     int pdpt_idx = get_index(va, 2);
     int pd_idx   = get_index(va, 1);

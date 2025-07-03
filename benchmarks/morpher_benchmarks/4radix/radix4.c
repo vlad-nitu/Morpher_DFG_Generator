@@ -34,25 +34,30 @@ void page_table_walk() {
     u64* tables[4] = {PT, PD, PDPT, PML4};  // Bottom-up order
     int indexes[4];
 
-    for (int level = 0; level < 4; level++) {
+    // Compute all indexes
+    int level = 0;
+    while (level < 4) {
         indexes[3 - level] = get_index(va, level);
+        level++;
     }
 
     printf("VA: 0x%lx -> Indexes: [%d, %d, %d, %d]\n",
            va, indexes[3], indexes[2], indexes[1], indexes[0]);
 
-    // Start from the top-level table (PML4)
+    // Page table walk using while loop
     u64* current_table = PML4;
-    for (int level = 3; level > 0; level--) {
+    level = 3;
+    while (level > 0) {
         int idx = indexes[level];
         if (current_table[idx] == 0) {
             printf("Level %d miss\n", level);
             return;
         }
-        current_table = (u64*)current_table[idx];  // Next level table
+        current_table = (u64*)current_table[idx];
+        level--;
     }
 
-    // Last level: PT lookup
+    // PT level
     int pt_idx = indexes[0];
     if (current_table[pt_idx] == 0) {
         printf("PT miss\n");

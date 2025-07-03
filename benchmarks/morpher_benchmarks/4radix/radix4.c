@@ -41,22 +41,22 @@ void page_table_walk() {
 
     if (PML4[pml4_idx] == 0) {
         printf("PML4 miss\n");
-        return 0;
+        return;
     }
 
     if (PDPT[pdpt_idx] == 0) {
         printf("PDPT miss\n");
-        return 0;
+        return;
     }
 
     if (PD[pd_idx] == 0) {
         printf("PD miss\n");
-        return 0;
+        return;
     }
 
     if (PT[pt_idx] == 0) {
         printf("PT miss\n");
-        return 0;
+        return;
     }
 
     // Final physical address = frame base + page offset
@@ -81,7 +81,7 @@ int main() {
     PT[pt_idx] = (u64)&physical_memory[0];  // Points to physical frame
 
     page_table_walk();
-    
+
     if (pa)
         printf("Translated PA: 0x%lx\n", pa);
     else

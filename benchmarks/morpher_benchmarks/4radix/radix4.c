@@ -18,6 +18,7 @@ u64 physical_memory[1024];
 
 // VA global variabel, the LLVM optimiser (opt) expects a function w/o args?
 u64 va = -1;
+u64 pa = -1;
 
 // Helper to extract index bits from a virtual address
 int get_index(u64 va, int level) {
@@ -25,7 +26,7 @@ int get_index(u64 va, int level) {
 }
 
 // Perform a simulated page table walk
-u64 page_table_walk() {
+void page_table_walk() {
 #ifdef CGRA_COMPILER
     // This function is expected to be mapped by the CGRA compiler 
     please_map_me();
@@ -61,7 +62,7 @@ u64 page_table_walk() {
     // Final physical address = frame base + page offset
     u64 page_offset = va & 0xFFF;
     u64 frame_base = PT[pt_idx];
-    return frame_base + page_offset;
+    pa = frame_base + page_offset;
 }
 
 int main() {
@@ -79,7 +80,8 @@ int main() {
     PD[pd_idx] = (u64)&PT;
     PT[pt_idx] = (u64)&physical_memory[0];  // Points to physical frame
 
-    u64 pa = page_table_walk();
+    page_table_walk();
+    
     if (pa)
         printf("Translated PA: 0x%lx\n", pa);
     else

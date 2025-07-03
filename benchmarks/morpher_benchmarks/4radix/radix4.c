@@ -16,13 +16,16 @@ u64 PT[ENTRIES];
 // Simulated physical frames (for illustration)
 u64 physical_memory[1024];
 
+// VA global variabel, the LLVM optimiser (opt) expects a function w/o args?
+u64 va = -1;
+
 // Helper to extract index bits from a virtual address
 int get_index(u64 va, int level) {
     return (va >> (PAGE_SHIFT + 9 * level)) & 0x1FF;  // 9 bits per level
 }
 
 // Perform a simulated page table walk
-u64 page_table_walk(u64 va) {
+u64 page_table_walk() {
     int pml4_idx = get_index(va, 3);
     int pdpt_idx = get_index(va, 2);
     int pd_idx   = get_index(va, 1);
@@ -58,7 +61,7 @@ u64 page_table_walk(u64 va) {
 
 int main() {
     // Setup a virtual-to-physical mapping
-    u64 va = 0x123456789;  // Example virtual address
+    va = 0x123456789;  // Example virtual address
 
     // Setup simulated page table entries
     int pml4_idx = get_index(va, 3);
@@ -71,7 +74,7 @@ int main() {
     PD[pd_idx] = (u64)&PT;
     PT[pt_idx] = (u64)&physical_memory[0];  // Points to physical frame
 
-    u64 pa = page_table_walk(va);
+    u64 pa = page_table_walk();
     if (pa)
         printf("Translated PA: 0x%lx\n", pa);
     else

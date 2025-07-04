@@ -11174,6 +11174,7 @@ void DFG::InstrumentInOutVars(Function &F, std::unordered_map<Value *, int> mem_
 	{
 
 		Value* ptr = i.second;
+		ptr = ptr->stripInBoundsOffsets();
 		LLVM_DEBUG(ptr->dump());
 		LLVM_DEBUG(dbgs() << "\n");
 

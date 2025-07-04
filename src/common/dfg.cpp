@@ -11037,14 +11037,14 @@ void DFG::SetBasePointers(std::unordered_set<Value *> &outer_vals,
 			if (LoadInst *LDI = dyn_cast<LoadInst>(node->getNode()))
 			{
 				Value *pointer = LDI->getPointerOperand();
-				if(sizeArrMap.find(pointer->stripInBoundsOffsets()>getNameOrAsOperand()) != sizeArrMap.end()){
-					array_pointer_sizes[pointer->stripInBoundsOffsets()>getNameOrAsOperand()] = sizeArrMap[pointer->getNameOrAsOperand()];
-					node->setArrBasePtr(pointer->stripInBoundsOffsets()>getNameOrAsOperand());
+				if(sizeArrMap.find(pointer->stripInBoundsOffsets()->getNameOrAsOperand()) != sizeArrMap.end()){
+					array_pointer_sizes[pointer->stripInBoundsOffsets()->getNameOrAsOperand()] = sizeArrMap[pointer->getNameOrAsOperand()];
+					node->setArrBasePtr(pointer->stripInBoundsOffsets()->getNameOrAsOperand());
 				}
 				else{
 					assert(mem_ptrs.find(pointer) != mem_ptrs.end());
 
-					std::string base_ptr_name = mem_ptrs[pointer]->getPointerOperand()->stripInBoundsOffsets()>getNameOrAsOperand();
+					std::string base_ptr_name = mem_ptrs[pointer]->getPointerOperand()->stripInBoundsOffsets()->getNameOrAsOperand();
 					node->setArrBasePtr(base_ptr_name);
 
 					if (sizeArrMap.find(base_ptr_name) != sizeArrMap.end())
@@ -11068,14 +11068,14 @@ void DFG::SetBasePointers(std::unordered_set<Value *> &outer_vals,
 			else if (StoreInst *STI = dyn_cast<StoreInst>(node->getNode()))
 			{
 				Value *pointer = STI->getPointerOperand();
-				if(sizeArrMap.find(pointer->stripInBoundsOffsets()>getNameOrAsOperand()) != sizeArrMap.end()){
-					array_pointer_sizes[pointer->stripInBoundsOffsets()>getNameOrAsOperand()] = sizeArrMap[pointer->getNameOrAsOperand()];
-					node->setArrBasePtr(pointer->stripInBoundsOffsets()>getNameOrAsOperand());
+				if(sizeArrMap.find(pointer->stripInBoundsOffsets()->getNameOrAsOperand()) != sizeArrMap.end()){
+					array_pointer_sizes[pointer->stripInBoundsOffsets()->getNameOrAsOperand()] = sizeArrMap[pointer->getNameOrAsOperand()];
+					node->setArrBasePtr(pointer->stripInBoundsOffsets()->getNameOrAsOperand());
 				}
 				else{
 					assert(mem_ptrs.find(pointer) != mem_ptrs.end());
 
-					std::string base_ptr_name = mem_ptrs[pointer]->getPointerOperand()->stripInBoundsOffsets()>getNameOrAsOperand();
+					std::string base_ptr_name = mem_ptrs[pointer]->getPointerOperand()->stripInBoundsOffsets()->getNameOrAsOperand();
 					node->setArrBasePtr(base_ptr_name);
 
 					if (sizeArrMap.find(base_ptr_name) != sizeArrMap.end())
@@ -11109,7 +11109,7 @@ void DFG::SetBasePointers(std::unordered_set<Value *> &outer_vals,
 			LLVM_DEBUG(node->getNode()->dump());
 			GetElementPtrInst *GEP = cast<GetElementPtrInst>(node->getNode());
 			LLVM_DEBUG(GEP->getPointerOperand()->dump());
-			std::string base_ptr_name = GEP->getPointerOperand()->stripInBoundsOffsets()>getNameOrAsOperand();
+			std::string base_ptr_name = GEP->getPointerOperand()->stripInBoundsOffsets()->getNameOrAsOperand();
 			node->setArrBasePtr(base_ptr_name);
 
 			if (sizeArrMap.find(base_ptr_name) != sizeArrMap.end())
@@ -11279,16 +11279,16 @@ void DFG::InstrumentInOutVars(Function &F, std::unordered_map<Value *, int> mem_
 		IRBuilder<> builder(NodeList[0]->getNode());
 
 		Value* ptr = it->first;
-		LLVM_DEBUG(dbgs() << "\n---ptr_name = " << ptr->stripInBoundsOffsets()>getNameOrAsOperand() << "\n");
+		LLVM_DEBUG(dbgs() << "\n---ptr_name = " << ptr->stripInBoundsOffsets()->getNameOrAsOperand() << "\n");
 		LLVM_DEBUG(ptr->dump());
 
 
-		assert(array_pointer_sizes.find(ptr->stripInBoundsOffsets()>getNameOrAsOperand()) != array_pointer_sizes.end());
-		int size = array_pointer_sizes[ptr->stripInBoundsOffsets()>getNameOrAsOperand()];
+		assert(array_pointer_sizes.find(ptr->stripInBoundsOffsets()->getNameOrAsOperand()) != array_pointer_sizes.end());
+		int size = array_pointer_sizes[ptr->stripInBoundsOffsets()->getNameOrAsOperand()];
 
 		LLVM_DEBUG(dbgs() << "size = " << size << "\n");
 
-		Value* ptr_name_val = builder.CreateGlobalStringPtr(ptr->stripInBoundsOffsets()>getNameOrAsOperand());
+		Value* ptr_name_val = builder.CreateGlobalStringPtr(ptr->stripInBoundsOffsets()->getNameOrAsOperand());
 		Value *size_val = ConstantInt::get(Type::getInt32Ty(Ctx), size);
 		Value *size_val2 = ConstantInt::get(Type::getInt32Ty(Ctx), size/4);
 		bool isOLNodewithPtrTyUsage = false;
@@ -11313,8 +11313,8 @@ void DFG::InstrumentInOutVars(Function &F, std::unordered_map<Value *, int> mem_
 					LLVM_DEBUG(dbgs() << "GEP operand 2 =  ");
 					LLVM_DEBUG(GEP->getOperand(2)->dump());
 					LLVM_DEBUG(GEP->getOperand(0)->dump());
-					LLVM_DEBUG(dbgs() << "array base = " << GEP->getOperand(0)->stripInBoundsOffsets()>getNameOrAsOperand() << "\n");
-					Value* gepop0 = builder.CreateGlobalStringPtr(GEP->getOperand(0)->stripInBoundsOffsets()>getNameOrAsOperand());//base ptr of array
+					LLVM_DEBUG(dbgs() << "array base = " << GEP->getOperand(0)->stripInBoundsOffsets()->getNameOrAsOperand() << "\n");
+					Value* gepop0 = builder.CreateGlobalStringPtr(GEP->getOperand(0)->stripInBoundsOffsets()->getNameOrAsOperand());//base ptr of array
 					Value * gepop2= GEP->getOperand(2);// array offset
 					LLVM_DEBUG(dbgs() << "\n");
 
@@ -11452,9 +11452,9 @@ void DFG::UpdateSPMAllocation(std::unordered_map<Value *, int> &spm_base_address
 			{
 				node->setLeftAlignedMemOp(2);
 			}
-			LLVM_DEBUG(dbgs() << "\t pointer " << OutLoopNodeMapReverse[node]->stripInBoundsOffsets()>getNameOrAsOperand() << "\n");
+			LLVM_DEBUG(dbgs() << "\t pointer " << OutLoopNodeMapReverse[node]->stripInBoundsOffsets()->getNameOrAsOperand() << "\n");
 			LLVM_DEBUG(dbgs() << "\t to address " << spm_base_address[OutLoopNodeMapReverse[node]] << "\n");
-			var_name = OutLoopNodeMapReverse[node]->stripInBoundsOffsets()>getNameOrAsOperand();
+			var_name = OutLoopNodeMapReverse[node]->stripInBoundsOffsets()->getNameOrAsOperand();
 			base_addr = spm_base_address[OutLoopNodeMapReverse[node]];
 			base_address_map[var_name]=base_addr;
 		}
@@ -11468,9 +11468,9 @@ void DFG::UpdateSPMAllocation(std::unordered_map<Value *, int> &spm_base_address
 					node->setGEPbaseAddr(spm_base_address[gep_pointer]);
 					LLVM_DEBUG(dbgs() << "SetNewGEPBaseAddresses :: setting GEP base address for=");
 					LLVM_DEBUG(GEP->dump());
-					LLVM_DEBUG(dbgs() << "\t pointer " << gep_pointer->stripInBoundsOffsets()>getNameOrAsOperand() << "\n");
+					LLVM_DEBUG(dbgs() << "\t pointer " << gep_pointer->stripInBoundsOffsets()->getNameOrAsOperand() << "\n");
 					LLVM_DEBUG(dbgs() << "\t to address " << spm_base_address[gep_pointer] << "\n");
-					var_name = gep_pointer->stripInBoundsOffsets()>getNameOrAsOperand();
+					var_name = gep_pointer->stripInBoundsOffsets()->getNameOrAsOperand();
 					base_addr = spm_base_address[gep_pointer];
 					base_address_map[var_name]=base_addr;
 					//					mem_alloc_txt << var_name<<","<< base_addr<<"\n";
@@ -11482,7 +11482,7 @@ void DFG::UpdateSPMAllocation(std::unordered_map<Value *, int> &spm_base_address
 				LLVM_DEBUG(ptr->dump());
 
 				if(arr_ptrs.find(ptr) == arr_ptrs.end()){
-					LLVM_DEBUG(dbgs() << "\t pointer  " << ptr->stripInBoundsOffsets()>getNameOrAsOperand() << "\n");
+					LLVM_DEBUG(dbgs() << "\t pointer  " << ptr->stripInBoundsOffsets()->getNameOrAsOperand() << "\n");
 					LLVM_DEBUG(dbgs() << "\t to address " << spm_base_address[ptr] << "\n");
 				}
 
@@ -11499,9 +11499,9 @@ void DFG::UpdateSPMAllocation(std::unordered_map<Value *, int> &spm_base_address
 					node->setLeftAlignedMemOp(2);
 				}
 
-				LLVM_DEBUG(dbgs() << "\t pointer  " << gep_ptr->stripInBoundsOffsets()>getNameOrAsOperand() << "\n");
+				LLVM_DEBUG(dbgs() << "\t pointer  " << gep_ptr->stripInBoundsOffsets()->getNameOrAsOperand() << "\n");
 				LLVM_DEBUG(dbgs() << "\t to address " << spm_base_address[gep_ptr] << "\n");
-				var_name = gep_ptr->stripInBoundsOffsets()>getNameOrAsOperand();
+				var_name = gep_ptr->stripInBoundsOffsets()->getNameOrAsOperand();
 				base_addr = spm_base_address[gep_ptr];
 				base_address_map[var_name]=base_addr;
 			}
@@ -11522,9 +11522,9 @@ void DFG::UpdateSPMAllocation(std::unordered_map<Value *, int> &spm_base_address
 					node->setLeftAlignedMemOp(2);
 				}
 
-				LLVM_DEBUG(dbgs() << "\t pointer " << gep_ptr->stripInBoundsOffsets()>getNameOrAsOperand() << "\n");
+				LLVM_DEBUG(dbgs() << "\t pointer " << gep_ptr->stripInBoundsOffsets()->getNameOrAsOperand() << "\n");
 				LLVM_DEBUG(dbgs() << "\t to address " << spm_base_address[gep_ptr] << "\n");
-				var_name = gep_ptr->stripInBoundsOffsets()>getNameOrAsOperand();
+				var_name = gep_ptr->stripInBoundsOffsets()->getNameOrAsOperand();
 				base_addr = spm_base_address[gep_ptr];
 				base_address_map[var_name]=base_addr;
 			}

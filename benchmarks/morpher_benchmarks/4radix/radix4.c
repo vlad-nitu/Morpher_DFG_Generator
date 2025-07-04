@@ -5,6 +5,11 @@
 #define PAGE_SHIFT 12
 #define LEVELS 4
 
+// !!!!!!!!!!!! If we define DEBUG and then use CGRA compiler to map, it will see the printf and will translate it into the 'call' assembly instruction
+// which Morpher does not support (i.e, doesn't know how to map it).
+// So, when compiling with CGRA_COMPILER, MAKE SURE THIS MACRO IS UNDEFINED: DEBUG.
+#undef DEBUG
+
 typedef uint64_t u64;
 
 // Simulated page tables
@@ -27,9 +32,6 @@ int get_index(u64 va, int level) {
 
 // Perform a simulated page table walk
 void page_table_walk() {
-#ifdef CGRA_COMPILER
-    please_map_me();
-#endif
 
     u64* tables[4] = {PT, PD, PDPT, PML4};  // Bottom-up order
     int indexes[4];
@@ -39,16 +41,22 @@ void page_table_walk() {
     indexes[1] = get_index(va, 2);  // PD index
     indexes[0] = get_index(va, 3);  // PT index
 
+#ifdef DEBUG
     printf("VA: 0x%lx -> Indexes: [%d, %d, %d, %d]\n",
            va, indexes[3], indexes[2], indexes[1], indexes[0]);
+#endif
 
     // Page table walk using while loop
     u64* current_table = PML4;
-    int level = 3;
-    while (level > 0) {
+    for (int level = 3; level > 0; level--) {
+#ifdef CGRA_COMPILER
+    please_map_me();
+#endif
         int idx = indexes[level];
         if (current_table[idx] == 0) {
+#ifdef DEBUG
             printf("Level %d miss\n", level);
+#endif
             return;
         }
         current_table = (u64*)current_table[idx];
@@ -58,7 +66,9 @@ void page_table_walk() {
     // PT level
     int pt_idx = indexes[0];
     if (current_table[pt_idx] == 0) {
+#ifdef DEBUG
         printf("PT miss\n");
+#endif
         return;
     }
 

@@ -33,13 +33,7 @@ void page_table_walk() {
 
     u64* tables[4] = {PT, PD, PDPT, PML4};  // Bottom-up order
     int indexes[4];
-
-    // Compute all indexes
-    // int level = 0;
-    // while (level < 4) {
-    //     indexes[3 - level] = get_index(va, level);
-    //     level++;
-    // }
+    
     indexes[3] = get_index(va, 0);  // PML4 index
     indexes[2] = get_index(va, 1);  // PDPT index
     indexes[1] = get_index(va, 2);  // PD index
@@ -50,7 +44,7 @@ void page_table_walk() {
 
     // Page table walk using while loop
     u64* current_table = PML4;
-    level = 3;
+    int level = 3;
     while (level > 0) {
         int idx = indexes[level];
         if (current_table[idx] == 0) {

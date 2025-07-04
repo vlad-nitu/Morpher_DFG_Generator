@@ -1,85 +1,60 @@
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
-#define ENTRIES     512
-#define PAGE_SHIFT  12           /* 4 KB pages → 12-bit offset */
+#define PAGE_SHIFT 12
+#define ENTRIES    512
 
 typedef uint64_t u64;
 
-/* ------------------------------------------------------------------ */
-/* simulated page tables and memory                                   */
-u64 PML4[ENTRIES], PDPT[ENTRIES], PD[ENTRIES], PT[ENTRIES];
-u64 physical_memory[1024];
-
-/* virtual address for the demo */
-u64 va = 0x123456789;
-
-/* ------------------------------------------------------------------ */
+/* helper --------------------------------------------------------------- */
 static inline int get_index(u64 va, int level)
-/* level = 0 → PML4, …, 3 → PT                                    */
 {
     return (va >> (PAGE_SHIFT + 9 * level)) & 0x1FF;
 }
 
-/* ------------------------------------------------------------------ */
-u64 page_table_walk(u64 va)
-/* returns 0 on miss, PA on hit                                     */
+/* ---------------------------------------------------------------------- */
+/*  new signature: all tables come in as arguments                        */
+void page_table_walk(u64              va,
+                    u64 *restrict    PML4,
+                    u64 *restrict    PDPT,
+                    u64 *restrict    PD,
+                    u64 *restrict    PT)
 {
-    int idx[4];
-    idx[3] = get_index(va, 0);   /* PML4 */
-    idx[2] = get_index(va, 1);   /* PDPT */
-    idx[1] = get_index(va, 2);   /* PD   */
-    idx[0] = get_index(va, 3);   /* PT   */
+    /* compute indexes once */
+    int idx3 = get_index(va, 0);   /* PML4  */
+    int idx2 = get_index(va, 1);   /* PDPT  */
+    int idx1 = get_index(va, 2);   /* PD    */
+    int idx0 = get_index(va, 3);   /* PT    */
 
-#ifdef DEBUG
-    printf("VA 0x%lx → idx [%d %d %d %d]\n",
-           va, idx[3], idx[2], idx[1], idx[0]);
-#endif
+    /* walk */
+    u64 *cur = PML4;
+    if ((cur = (u64*)cur[idx3]) == 0) return 0;
+    if ((cur = (u64*)cur[idx2]) == 0) return 0;
+    if ((cur = (u64*)cur[idx1]) == 0) return 0;
+    if (cur[idx0] == 0)               return 0;
 
-    u64 *cur = &PML4[0];         /* named base pointer */
-
-    for (int level = 3; level > 0; --level) {
-#ifdef CGRA_COMPILER
-        please_map_me();
-#endif
-        int i = idx[level];
-        if (cur[i] == 0) {       /* entry not present → miss */
-#ifdef DEBUG
-            printf("miss at level %d\n", level);
-#endif
-            return 0;
-        }
-        cur = (u64*)cur[i];      /* descend to next level   */
-    }
-
-    /* PT level */
-    if (cur[idx[0]] == 0) {
-#ifdef DEBUG
-        puts("PT miss");
-#endif
-        return 0;
-    }
-
-    const u64 frame_base  = cur[idx[0]];
-    const u64 page_offset = va & ((1ULL << PAGE_SHIFT) - 1);
+    u64 frame_base  = cur[idx0];
+    u64 page_offset = va & ((1ULL<<PAGE_SHIFT)-1);
     // pa = frame_base + page_offset;
 }
 
-/* ------------------------------------------------------------------ */
+/* ---------------------------------------------------------------------- */
+/*  driver: allocate tables as globals but pass their base address in     */
+u64 PML4[ENTRIES], PDPT[ENTRIES], PD[ENTRIES], PT[ENTRIES];
+u64 physical_memory[1024];
+
 int main(void)
 {
-    /* build a simple mapping for the demo */
-    PML4[get_index(va, 3)] = (u64)&PDPT;
-    PDPT[get_index(va, 2)] = (u64)&PD;
-    PD[get_index(va, 1)]   = (u64)&PT;
-    PT[get_index(va, 0)]   = (u64)&physical_memory[0];
+    u64 va = 0x123456789;
 
-    u64 pa = page_table_walk(va);
+    /* minimal mapping for demo */
+    PML4[get_index(va,3)] = (u64)&PDPT;
+    PDPT[get_index(va,2)] = (u64)&PD;
+    PD[get_index(va,1)]   = (u64)&PT;
+    PT[get_index(va,0)]   = (u64)&physical_memory[0];
 
-    if (pa)
-        printf("PA 0x%lx\n", pa);
-    else
-        puts("translation failed");
+    u64 pa = page_table_walk(va, PML4, PDPT, PD, PT);
 
-    return 0;
+    if (pa) printf("PA = 0x%lx\n", pa);
+    else    puts("translation failed");
 }

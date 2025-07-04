@@ -47,7 +47,7 @@ void page_table_walk() {
 #endif
 
     // Page table walk using while loop
-    u64* current_table = PML4;
+    u64* current_table = &PML4[0];
     for (int level = 3; level > 0; level--) {
 #ifdef CGRA_COMPILER
     please_map_me();

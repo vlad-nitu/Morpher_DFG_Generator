@@ -74,7 +74,7 @@ void page_table_walk() {
 
     u64 page_offset = va & 0xFFF;
     u64 frame_base = current_table[pt_idx];
-    pa = frame_base + page_offset;
+    // pa = frame_base + page_offset;
 }
 
 int main() {

@@ -10,30 +10,30 @@
 // So, when compiling with CGRA_COMPILER, MAKE SURE THIS MACRO IS UNDEFINED: DEBUG.
 #undef DEBUG
 
-typedef uint32_t u32;
+typedef uint64_t u64;
 
 // Simulated page tables
-u32 PML4[ENTRIES];
-u32 PDPT[ENTRIES];
-u32 PD[ENTRIES];
-u32 PT[ENTRIES];
+u64 PML4[ENTRIES];
+u64 PDPT[ENTRIES];
+u64 PD[ENTRIES];
+u64 PT[ENTRIES];
 
 // Simulated physical frames (for illustration)
-u32 physical_memory[1024];
+u64 physical_memory[1024];
 
 // VA global variabel, the LLVM optimiser (opt) expects a function w/o args?
-u32 va = -1;
-u32 pa = -1;
+u64 va = -1;
+u64 pa = -1;
 
 // Helper to extract index bits from a virtual address
-int get_index(u32 va, int level) {
+int get_index(u64 va, int level) {
     return (va >> (PAGE_SHIFT + 9 * level)) & 0x1FF;  // 9 bits per level
 }
 
 // Perform a simulated page table walk
 void page_table_walk() {
 
-    u32* tables[4] = {PT, PD, PDPT, PML4};  // Bottom-up order
+    u64* tables[4] = {PT, PD, PDPT, PML4};  // Bottom-up order
     int indexes[4];
     
     indexes[3] = get_index(va, 0);  // PML4 index
@@ -47,7 +47,7 @@ void page_table_walk() {
 #endif
 
     // Page table walk using while loop
-    u32* current_table = PML4;
+    u64* current_table = PML4;
     for (int level = 3; level > 0; level--) {
 #ifdef CGRA_COMPILER
     please_map_me();
@@ -59,7 +59,7 @@ void page_table_walk() {
 #endif
             return;
         }
-        current_table = (u32*)current_table[idx];
+        current_table = (u64*)current_table[idx];
         level--;
     }
 
@@ -72,8 +72,8 @@ void page_table_walk() {
         return;
     }
 
-    u32 page_offset = va & 0xFFF;
-    u32 frame_base = current_table[pt_idx];
+    u64 page_offset = va & 0xFFF;
+    u64 frame_base = current_table[pt_idx];
     pa = frame_base + page_offset;
 }
 
@@ -87,10 +87,10 @@ int main() {
     int pd_idx   = get_index(va, 1);
     int pt_idx   = get_index(va, 0);
 
-    PML4[pml4_idx] = (u32)&PDPT;
-    PDPT[pdpt_idx] = (u32)&PD;
-    PD[pd_idx] = (u32)&PT;
-    PT[pt_idx] = (u32)&physical_memory[0];  // Points to physical frame
+    PML4[pml4_idx] = (u64)&PDPT;
+    PDPT[pdpt_idx] = (u64)&PD;
+    PD[pd_idx] = (u64)&PT;
+    PT[pt_idx] = (u64)&physical_memory[0];  // Points to physical frame
 
     page_table_walk();
 

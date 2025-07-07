@@ -56,7 +56,6 @@ void page_table_walk() {
     pa = 0;
 
     // Extract all necessary indexes from the virtual address first.
-    // This makes the subsequent walk logic cleaner and less error-prone.
     int indexes[LEVELS]; // Array to store indexes for each level
     indexes[3] = get_index(va, 3); // PML4 index
     indexes[2] = get_index(va, 2); // PDPT index
@@ -69,53 +68,63 @@ void page_table_walk() {
            va, indexes[3], indexes[2], indexes[1], indexes[0]);
 #endif
 
-    // Start the page table walk from the PML4 table.
-    u64 current_table_ptr[ENTRIES] = PML4;
+    // This variable will hold the *physical address* of the next page table base.
+    // It is a u64, not a u64*, to avoid problematic casts and loss of array type info.
+    u64 next_table_base_addr;
 
-    // Loop through the page table levels from PML4 (level 3) down to PD (level 1).
-    // The PT level (level 0) will be handled separately after the loop,
-    // as the original code intended.
-    for (int level = LEVELS - 1; level >= 1; --level) {
+    // --- Start the page table walk loop from PML4 (level 3) down to PT (level 0) ---
+    for (int level = LEVELS - 1; level >= 0; --level) {
 #ifdef CGRA_COMPILER
         // This macro is specific to your CGRA compiler to indicate a mappable region.
         // It's placed here to signify that this stage of the walk should be mapped.
         please_map_me();
 #endif
-        // Get the index for the current page table level.
-        int idx = indexes[level];
 
-        // Check if the entry in the current page table is valid (non-zero).
-        if (current_table_ptr[idx] == 0) {
+        int idx = indexes[level]; // Get the index for the current level
+
+        // Use a switch statement to explicitly access the correct global array
+        // based on the current 'level'. This ensures the compiler always knows
+        // the static type and size of the array being accessed.
+        switch (level) {
+            case 3: // PML4 level
+                next_table_base_addr = PML4[idx];
+                break;
+            case 2: // PDPT level
+                // The address 'next_table_base_addr' from the previous level (PML4)
+                // is now interpreted as the base of the PDPT table.
+                // We cast it to u64* *just for this access* to dereference it.
+                // The result is then stored back into next_table_base_addr (u64).
+                next_table_base_addr = ((u64*)next_table_base_addr)[idx];
+                break;
+            case 1: // PD level
+                // Similar to PDPT, interpret the address from PDPT as the base of PD.
+                next_table_base_addr = ((u64*)next_table_base_addr)[idx];
+                break;
+            case 0: // PT level (final lookup for physical frame)
+                // Interpret the address from PD as the base of PT.
+                next_table_base_addr = ((u64*)next_table_base_addr)[idx];
+                break;
+            default:
+                // Should not happen with valid 'LEVELS' and loop bounds
+                return;
+        }
+
+        // Check for a page table miss at any level (except the very last step
+        // where next_table_base_addr becomes the frame_base).
+        // If it's the last level (PT), next_table_base_addr will be the frame_base,
+        // and a 0 value indicates a miss.
+        if (next_table_base_addr == 0) {
 #ifdef DEBUG
             printf("Level %d miss: Entry is 0x0 at index %d\n", level, idx);
 #endif
-            return; // Translation failed, pa remains 0.
+            return;
         }
-        // Update current_table_ptr to point to the base address of the next level's table.
-        // The value stored in the current entry is the physical address of the next table.
-        current_table_ptr = (u64*)current_table_ptr[idx];
     }
 
-    // After the loop, 'current_table_ptr' should now point to the base of the
-    // PT (Page Table) for the final lookup.
-    // Handle the PT level (level 0) lookup.
-    int pt_idx = indexes[0]; // Get the index for the PT level.
-
-    // Check if the entry in the PT is valid.
-    if (current_table_ptr[pt_idx] == 0) {
-#ifdef DEBUG
-        printf("PT miss: Entry is 0x0 at index %d\n", pt_idx);
-#endif
-        return; // Translation failed.
-    }
-
-    // --- Final Physical Address Calculation ---
-    // The last 12 bits of the virtual address form the page offset.
-    u64 page_offset = va & 0xFFF;
-    // The 'current_table_ptr[pt_idx]' holds the base physical frame address.
-    u64 frame_base = current_table_ptr[pt_idx];
-    // Calculate the final physical address by adding the page offset to the frame base.
-    // pa = frame_base + page_offset;
+    // After the loop, 'next_table_base_addr' holds the physical frame base address.
+    // Calculate the final physical address.
+    u64 page_offset = va & 0xFFF; // Last 12 bits are page offset
+    // pa = next_table_base_addr + page_offset;
 }
 
 /**

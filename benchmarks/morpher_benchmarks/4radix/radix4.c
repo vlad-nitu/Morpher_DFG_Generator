@@ -66,7 +66,7 @@ void page_table_walk(void)
 #ifdef CGRA_COMPILER
         please_map_me();
 #endif
-        volatile int lvl = level;   /* prevents jump-table folding      */
+        int lvl = level;   /* prevents jump-table folding      */
         int i = get_index(va, lvl);          /* ← direct call, no alloca   */
 
 

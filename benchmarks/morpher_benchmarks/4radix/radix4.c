@@ -70,7 +70,8 @@ void page_table_walk(void)
 #ifdef CGRA_COMPILER
         please_map_me();                 /* anchor for mapper */
 #endif
-        int i = idx[level];
+       volatile level_vol = level;
+       int i = idx[level_vol];
 
         if (level == 3) {                 /* DIRECT accesses */
             frame = PML4[i]; PML4[i] = frame;

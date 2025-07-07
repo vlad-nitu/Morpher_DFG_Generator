@@ -93,10 +93,11 @@ int main() {
     va = 0xCAFEBABE;
 
     // Get the indexes for setting up the simulated page table entries.
-    int pml4_idx = get_index(va, 3);
-    int pdpt_idx = get_index(va, 2);
-    int pd_idx   = get_index(va, 1);
-    int pt_idx   = get_index(va, 0);
+    // TODO: remove this mock index calculation
+    int pml4_idx = 0; // get_index(va, 3);
+    int pdpt_idx = 1; // get_index(va, 2);
+    int pd_idx   = 2; // get_index(va, 1);
+    int pt_idx   = 3; // get_index(va, 0);
 
     // Setup simulated page table entries. -> Dummy data
     PML4[pml4_idx] = (u32)0;

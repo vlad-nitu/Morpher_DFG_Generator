@@ -63,15 +63,10 @@ void page_table_walk(void)
 #ifdef CGRA_COMPILER
         please_map_me();
 #endif
-        int i = get_index(va, level);          /* ← direct call, no alloca   */
-
-
-        if (level == 3) { frame = PML4[i];  PML4[i]  = frame; }
-        else if (level == 2){ frame = PDPT[i]; PDPT[i] = frame; }
-        else if (level == 1){ frame = PD[i];   PD[i]   = frame; }
-        else              { frame = PT[i];   PT[i]   = frame; }
-
-        --level;                /* loop-variable update                */
+        if (level == 3) { frame = PML4[get_index(va, level)];  PML4[get_index(va, level)]  = frame; }
+        else if (level == 2){ frame = PDPT[get_index(va, level)]; PDPT[get_index(va, level)] = frame; }
+        else if (level == 1){ frame = PD[get_index(va, level)];   PD[get_index(va, level)]   = frame; }
+        else              { frame = PT[get_index(va, level)];   PT[get_index(va, level)]   = frame; }
     }
 
     // Assume PA given; 'frame' is global variable

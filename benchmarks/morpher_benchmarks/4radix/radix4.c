@@ -76,14 +76,14 @@ void page_table_walk() {
            va, indexes[3], indexes[2], indexes[1], indexes[0]);
 #endif
 
-    // Force global references so LLVM IR exposes them to the DFG pass
-    PML4[1] = PML4[1];
-    PDPT[1] = PDPT[1];
-    PD[1] = PD[1];
-    PT[1] = PT[1];
-    physical_memory[1] = physical_memory[1];
-    va = va;
-    pa = pa;
+    // // Force global references so LLVM IR exposes them to the DFG pass
+    // PML4[1] = PML4[1];
+    // PDPT[1] = PDPT[1];
+    // PD[1] = PD[1];
+    // PT[1] = PT[1];
+    // physical_memory[1] = physical_memory[1];
+    // va = va;
+    // pa = pa;
         
 
 

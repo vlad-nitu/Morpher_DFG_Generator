@@ -55,7 +55,7 @@ static inline int get_index(uint32_t va_addr, int level)
  * or sets pa to 0 if a page table miss occurs.
  */
 /* --------------------------------------------------- */
-__attribute__((noinline))
+__attribute__((noinline,optimize("O0")))  /* <<<<<<<<<<<<<< */
 void page_table_walk(void)
 {
     int idx[LEVELS];
@@ -65,12 +65,12 @@ void page_table_walk(void)
     idx[0]=get_index(va,0);
 
 
-    /* canonical count-down loop → clean `br` header  */
+    #pragma clang loop unroll(disable)        /* belt-and-braces */
     for (int level = LEVELS-1; level >= 0; --level) {
 #ifdef CGRA_COMPILER
         please_map_me();                 /* anchor for mapper */
 #endif
-       volatile level_vol = level;
+       volatile int level_vol = level;
        int i = idx[level_vol];
 
         if (level == 3) {                 /* DIRECT accesses */

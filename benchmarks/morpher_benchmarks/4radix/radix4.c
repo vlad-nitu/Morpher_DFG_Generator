@@ -32,7 +32,7 @@ u64 physical_memory[1024];
 // These are used globally as per the original code's intent.
 u64 va;
 u64 pa;
-u64 frame = 0;
+u64 frame;
 
 /**
  * @brief Helper function to extract the index bits for a specific page table level

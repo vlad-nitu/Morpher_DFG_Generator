@@ -57,48 +57,41 @@ int get_index(u64 va_addr, int level) {
  * Updates the global physical address (pa) upon successful translation,
  * or sets pa to 0 if a page table miss occurs.
  */
+/* --------------------------------------------------- */
 __attribute__((noinline))
-void page_table_walk() {
-    // Initialize pa to 0. This value will indicate a translation failure
-    // if the walk does not successfully find a physical address.
-    pa = 0;
+void page_table_walk(void)
+{
+    /* ---- “self-copy” keeps every global live ---- */
+    PML4[0]=PML4[0]; PDPT[0]=PDPT[0];
+    PD[0]  =PD[0];   PT[0]  =PT[0];
+    physical_memory[0]=physical_memory[0];
+    va=va; pa=pa;
+    /* ---------------------------------------------- */
 
-    // Extract all necessary indexes from the virtual address first.
-    int indexes[LEVELS]; // Array to store indexes for each level
-    indexes[3] = get_index(va, 3); // PML4 index
-    indexes[2] = get_index(va, 2); // PDPT index
-    indexes[1] = get_index(va, 1); // PD index
-    indexes[0] = get_index(va, 0); // PT index
+    int idx[LEVELS];
+    idx[3]=get_index(va,3);
+    idx[2]=get_index(va,2);
+    idx[1]=get_index(va,1);
+    idx[0]=get_index(va,0);
 
+    u64 frame = 0;
 
-    // --- Start the page table walk loop from PML4 (level 3) down to PT (level 0) ---
-    for (int i = 0; i < LEVELS - 1; ++i) {
-      int level = LEVELS - i - 1;
+    /* canonical count-down loop → clean `br` header  */
+    for (int level = LEVELS-1; level >= 0; --level) {
+#ifdef CGRA_COMPILER
+        please_map_me();                 /* anchor for mapper */
+#endif
+        int i = idx[level];
 
-      #ifdef CGRA_COMPILER
-      please_map_me();
-      #endif
-
-
-        int idx = indexes[level]; // Get the index for the current level
-        
-        if (level == 3) {
-                pte = PML4[idx];
-        } else if (level == 2) {
-                pte = PDPT[idx];
-        } else if (level == 1) {
-                pte = PD[idx];
-        } else if (level == 0) {
-                pte = PT[idx];     
+        switch (level) {                 /* DIRECT accesses */
+        case 3: frame = PML4[i]; PML4[i] = frame; break;
+        case 2: frame = PDPT[i]; PDPT[i] = frame; break;
+        case 1: frame = PD[i];   PD[i]   = frame; break;
+        case 0: frame = PT[i];   PT[i]   = frame; break;
         }
-
-        pte2 = pte + 1; // Force access to PTE to ensure it is not optimized away.
     }
 
-    // After the loop, 'next_table_base_addr' holds the physical frame base address.
-    // Calculate the final physical address.
-    u64 page_offset = va & 0xFFF; // Last 12 bits are page offset
-    // pa = next_table_base_addr + page_offset;
+    pa = frame + (va & 0xFFF);
 }
 
 /**

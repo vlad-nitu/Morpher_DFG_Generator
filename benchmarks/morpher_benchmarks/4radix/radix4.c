@@ -60,6 +60,9 @@ void page_table_walk()
 {
 
     for (int i = 0; i < ENTRIES; ++i) {
+      #ifdef CGRA_COMPILER
+      please_map_me();
+      #endif
         PML4[i] += PDPT[i] + PD[i] + PT[i]; // Simulate some operation on the page tables
     }
 }

@@ -70,22 +70,6 @@ void page_table_walk() {
     indexes[1] = get_index(va, 1); // PD index
     indexes[0] = get_index(va, 0); // PT index
 
-#ifdef DEBUG
-    // Print the virtual address and extracted indexes for debugging.
-    printf("VA: 0x%lx -> Indexes: PML4[%d], PDPT[%d], PD[%d], PT[%d]\n",
-           va, indexes[3], indexes[2], indexes[1], indexes[0]);
-#endif
-
-    // Force global references so LLVM IR exposes them to the DFG pass
-    PML4[1] = PML4[1];
-    PDPT[1] = PDPT[1];
-    PD[1] = PD[1];
-    PT[1] = PT[1];
-    physical_memory[1] = physical_memory[1];
-    va = va;
-    pa = pa;
-        
-
 
     // --- Start the page table walk loop from PML4 (level 3) down to PT (level 0) ---
     for (int i = 0; i < LEVELS - 1; ++i) {

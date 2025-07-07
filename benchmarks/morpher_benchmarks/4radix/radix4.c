@@ -32,6 +32,7 @@ u64 physical_memory[1024];
 // These are used globally as per the original code's intent.
 u64 va;
 u64 pa;
+u64 frame = 0;
 
 /**
  * @brief Helper function to extract the index bits for a specific page table level
@@ -72,7 +73,6 @@ void page_table_walk(void)
     idx[1]=get_index(va,1);
     idx[0]=get_index(va,0);
 
-    u64 frame = 0;
 
     /* canonical count-down loop → clean `br` header  */
     for (int level = LEVELS-1; level >= 0; --level) {
@@ -122,6 +122,8 @@ int main() {
 
     // Perform the page table walk.
     page_table_walk();
+
+    pa = frame + (va & 0xFFF); // Calculate the physical address based on the frame and offset.
 
     // Check if the translation was successful (pa is not 0).
     if (pa != 0) {

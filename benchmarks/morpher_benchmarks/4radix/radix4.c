@@ -32,7 +32,6 @@ u64 physical_memory[1024];
 // These are used globally as per the original code's intent.
 u64 va;
 u64 pa;
-u64 frame;
 
 /**
  * @brief Helper function to extract the index bits for a specific page table level
@@ -60,6 +59,7 @@ int get_index(u64 va_addr, int level) {
 __attribute__((noinline))
 void page_table_walk(void)
 {
+    u64 frame = 0;
     /* ---- “self-copy” keeps every global live ---- */
     PML4[0]=PML4[0]; PDPT[0]=PDPT[0];
     PD[0]  =PD[0];   PT[0]  =PT[0];

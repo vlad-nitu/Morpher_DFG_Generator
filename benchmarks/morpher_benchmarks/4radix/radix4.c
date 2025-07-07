@@ -123,9 +123,8 @@ int main() {
     // Perform the page table walk.
     page_table_walk();
 
-    pa = frame + (va & 0xFFF); // Calculate the physical address based on the frame and offset.
 
-    printf("Translated PA: 0x%lx\n", pa);
+    printf("Translated PA: 0x%lx\n", frame + (va & 0xFFF)); // Calculate the physical address based on the frame and offset.
 
     return 0;
 }

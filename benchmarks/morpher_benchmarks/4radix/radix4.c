@@ -54,6 +54,7 @@ int get_index(u64 va_addr, int level) {
  * Updates the global physical address (pa) upon successful translation,
  * or sets pa to 0 if a page table miss occurs.
  */
+__attribute__((noinline))
 void page_table_walk() {
     // Initialize pa to 0. This value will indicate a translation failure
     // if the walk does not successfully find a physical address.

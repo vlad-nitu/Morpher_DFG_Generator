@@ -73,6 +73,11 @@ void page_table_walk() {
            va, indexes[3], indexes[2], indexes[1], indexes[0]);
 #endif
 
+    // Force global references so LLVM IR exposes them to the DFG pass
+    volatile u64 force_refs = PML4[0] + PDPT[0] + PD[0] + PT[0] + physical_memory[0] + va + pa;
+    (void)force_refs;
+
+
     // This variable will hold the *physical address* of the next page table base.
     // It is a u64, not a u64*, to avoid problematic casts and loss of array type info.
     u64 next_table_base_addr;

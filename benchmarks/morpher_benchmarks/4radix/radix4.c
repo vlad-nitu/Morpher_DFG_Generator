@@ -10,6 +10,10 @@
 // as Morpher v2 might not support mapping 'call' assembly instructions.
 #undef DEBUG
 
+#ifdef CGRA_COMPILER
+extern void please_map_me();
+#endif
+
 // Define u64 as an alias for uint64_t for convenience
 typedef uint64_t u64;
 

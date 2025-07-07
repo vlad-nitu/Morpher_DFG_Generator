@@ -1,5 +1,11 @@
+#include <string.h>
 #include <stdio.h>
-#include <stdint.h>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <map>
+#include <iostream>
+#include "CGRA.h"
 
 // Define constants for page table entries, shift, and levels
 #define ENTRIES 512

@@ -57,7 +57,7 @@ int get_index(u64 va_addr, int level) {
  */
 /* --------------------------------------------------- */
 __attribute__((noinline))
-void page_table_walk(void)
+u64 page_table_walk(void)
 {
     u64 frame = 0;
     /* ---- “self-copy” keeps every global live ---- */
@@ -91,6 +91,7 @@ void page_table_walk(void)
 
     // Assume pa given
     // pa = frame + (va & 0xFFF);
+    return frame;
 }
 
 /**
@@ -121,8 +122,7 @@ int main() {
     PT[pt_idx]     = (u64)&physical_memory[0]; // The final entry points to a physical memory frame.
 
     // Perform the page table walk.
-    page_table_walk();
-
+    u64 frame = page_table_walk();
 
     // printf("Translated PA: 0x%lx\n", frame + (va & 0xFFF)); // Calculate the physical address based on the frame and offset.
 

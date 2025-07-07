@@ -33,8 +33,6 @@ u64 physical_memory[1024];
 u64 va;
 u64 pa;
 
-u64 pte2, pte;
-
 /**
  * @brief Helper function to extract the index bits for a specific page table level
  * from a given virtual address.
@@ -91,7 +89,8 @@ void page_table_walk(void)
         }
     }
 
-    pa = frame + (va & 0xFFF);
+    // Assume pa given
+    // pa = frame + (va & 0xFFF);
 }
 
 /**

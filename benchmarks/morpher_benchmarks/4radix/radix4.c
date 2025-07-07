@@ -4,7 +4,6 @@
 // Define constants for page table entries, shift, and levels
 #define ENTRIES 512
 #define PAGE_SHIFT 12
-#define LEVELS 4 // Number of page table levels (PML4, PDPT, PD, PT)
 
 // Undefine DEBUG macro to prevent printf calls during CGRA compilation,
 // as Morpher v2 might not support mapping 'call' assembly instructions.
@@ -16,6 +15,8 @@ extern void please_map_me();
 
 // Define u64 as an alias for uint64_t for convenience
 typedef uint64_t u64;
+
+const int LEVELS = 4; // Number of page table levels (PML4, PDPT, PD, PT)
 
 // Simulated page tables as global arrays.
 // These represent the base addresses of the page tables at each level.
@@ -87,10 +88,13 @@ void page_table_walk() {
 
 
     // --- Start the page table walk loop from PML4 (level 3) down to PT (level 0) ---
-    for (int level = LEVELS - 1; level >= 0; --level) {
+    for (int i = 0; i < LEVELS - 1; ++i) {
+      int level = LEVELS - i - 1;
+
       #ifdef CGRA_COMPILER
       please_map_me();
       #endif
+
 
         int idx = indexes[level]; // Get the index for the current level
 

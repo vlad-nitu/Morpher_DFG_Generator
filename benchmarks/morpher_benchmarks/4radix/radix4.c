@@ -13,41 +13,38 @@
 extern void please_map_me();
 #endif
 
-// Define u64 as an alias for uint64_t for convenience
-typedef uint64_t u64;
+typedef uint32_t u32; // Define u32 as an alias for uint64_t for clarity
 
 const int LEVELS = 4; // Number of page table levels (PML4, PDPT, PD, PT)
 
 // Simulated page tables as global arrays.
 // These represent the base addresses of the page tables at each level.
-u64 PML4[ENTRIES];
-u64 PDPT[ENTRIES];
-u64 PD[ENTRIES];
-u64 PT[ENTRIES];
+u32 PML4[ENTRIES];
+u32 PDPT[ENTRIES];
+u32 PD[ENTRIES];
+u32 PT[ENTRIES];
 
 // Simulated physical memory frames for illustration.
-u64 physical_memory[1024];
+u32 physical_memory[1024];
 
 // Global variables for virtual address (va) and physical address (pa).
 // These are used globally as per the original code's intent.
-u64 va;
-u64 pa;
+u32 va;
+u32 pa;
 
-/**
- * @brief Helper function to extract the index bits for a specific page table level
- * from a given virtual address.
- *
- * @param va_addr The virtual address from which to extract the index.
- * @param level The page table level (0 for PT, 1 for PD, 2 for PDPT, 3 for PML4).
- * @return The 9-bit index for the specified level.
- */
-int get_index(u64 va_addr, int level) {
-    // Each level uses 9 bits, and PAGE_SHIFT accounts for the page offset.
-    // Level 0 (PT): bits 12-20
-    // Level 1 (PD): bits 21-29
-    // Level 2 (PDPT): bits 30-38
-    // Level 3 (PML4): bits 39-47
-    return (va_addr >> (PAGE_SHIFT + 9 * level)) & 0x1FF; // 0x1FF is 511 (9 bits all set)
+#define PAGE_SHIFT 12      /* 4 KiB pages */
+#define LVL_BITS    4      /* 4 bits per level */
+#define LVL_MASK    0xF    /* 0b1111 */
+
+static inline int get_index(uint32_t va_addr, int level)
+/* level: 0 = PT, 1 = PD, 2 = PDPT, 3 = PML4 */
+{
+    /* shift = 16 + 4*level
+       level 0 → 16  (bits 19–16)
+       level 1 → 20  (bits 23–20)
+       level 2 → 24  (bits 27–24)
+       level 3 → 28  (bits 31–28) */
+    return (va_addr >> (16 + LVL_BITS * level)) & LVL_MASK;
 }
 
 /**
@@ -57,9 +54,9 @@ int get_index(u64 va_addr, int level) {
  */
 /* --------------------------------------------------- */
 __attribute__((noinline))
-u64 page_table_walk(void)
+u32 page_table_walk(void)
 {
-    u64 frame = 0;
+    u32 frame = 0;
     /* ---- “self-copy” keeps every global live ---- */
     PML4[0]=PML4[0]; PDPT[0]=PDPT[0];
     PD[0]  =PD[0];   PT[0]  =PT[0];
@@ -105,7 +102,7 @@ int main() {
 
     // Set an example virtual address.
     // Using a longer address (64-bit) to ensure all page table levels are exercised.
-    va = 0x123456789ABCDEF0;
+    va = 0xCAFEBABE;
 
     // Get the indexes for setting up the simulated page table entries.
     int pml4_idx = get_index(va, 3);
@@ -116,15 +113,15 @@ int main() {
     // Setup simulated page table entries.
     // In a real system, these would be physical frame numbers, but here
     // we use the addresses of the next level's page table arrays for simulation.
-    PML4[pml4_idx] = (u64)&PDPT[0];
-    PDPT[pdpt_idx] = (u64)&PD[0];
-    PD[pd_idx]     = (u64)&PT[0];
-    PT[pt_idx]     = (u64)&physical_memory[0]; // The final entry points to a physical memory frame.
+    PML4[pml4_idx] = (u32)&PDPT[0];
+    PDPT[pdpt_idx] = (u32)&PD[0];
+    PD[pd_idx]     = (u32)&PT[0];
+    PT[pt_idx]     = (u32)&physical_memory[0]; // The final entry points to a physical memory frame.
 
     // Perform the page table walk.
-    u64 frame = page_table_walk();
-
-    // printf("Translated PA: 0x%lx\n", frame + (va & 0xFFF)); // Calculate the physical address based on the frame and offset.
+    u32 frame = page_table_walk();
+    u32 pa = frame + (va & 0xFFF); // Calculate the physical address based on the frame and offset.
+    printf("Translated PA: 0x%lx\n", pa); // Calculate the physical address based on the frame and offset.
 
     return 0;
 }

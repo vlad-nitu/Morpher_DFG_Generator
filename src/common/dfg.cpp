@@ -9924,6 +9924,8 @@ int DFG::addMaskLowBitInstructions()
 				}
 				else
 				{
+					LLVM_DEBUG(dbgs() << "addMaskLowBitInstructions: node=" << node->getIdx()
+							<< " has byteWidth=" << byteWidth << "\n");
 					assert(byteWidth == 4);
 				}
 			}

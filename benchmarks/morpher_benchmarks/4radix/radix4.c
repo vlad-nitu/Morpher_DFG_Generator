@@ -58,22 +58,17 @@ static inline int get_index(uint32_t va_addr, int level)
 __attribute__((noinline))
 void page_table_walk(void)
 {
-    int level = LEVELS - 1;
-/* --- outer forever loop gives PartPred a real header --- */
-    while (1) {
-        if (level < 0)           /* ←– this branch must stay conditional */
-            break;
 
+    for (int level = LEVELS - 1; level >= 0; --level) {
 #ifdef CGRA_COMPILER
         please_map_me();
 #endif
-        int lvl = level;   /* prevents jump-table folding      */
-        int i = get_index(va, lvl);          /* ← direct call, no alloca   */
+        int i = get_index(va, level);          /* ← direct call, no alloca   */
 
 
-        if (lvl == 3) { frame = PML4[i];  PML4[i]  = frame; }
-        else if (lvl == 2){ frame = PDPT[i]; PDPT[i] = frame; }
-        else if (lvl == 1){ frame = PD[i];   PD[i]   = frame; }
+        if (level == 3) { frame = PML4[i];  PML4[i]  = frame; }
+        else if (level == 2){ frame = PDPT[i]; PDPT[i] = frame; }
+        else if (level == 1){ frame = PD[i];   PD[i]   = frame; }
         else              { frame = PT[i];   PT[i]   = frame; }
 
         --level;                /* loop-variable update                */

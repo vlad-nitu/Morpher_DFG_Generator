@@ -115,13 +115,11 @@ int main() {
     int pd_idx   = get_index(va, 1);
     int pt_idx   = get_index(va, 0);
 
-    // Setup simulated page table entries.
-    // In a real system, these would be physical frame numbers, but here
-    // we use the addresses of the next level's page table arrays for simulation.
-    PML4[pml4_idx] = (u32)&PDPT[0];
-    PDPT[pdpt_idx] = (u32)&PD[0];
-    PD[pd_idx]     = (u32)&PT[0];
-    PT[pt_idx]     = (u32)&physical_memory[0]; // The final entry points to a physical memory frame.
+    // Setup simulated page table entries. -> Dummy data
+    PML4[pml4_idx] = (u32)0;
+    PDPT[pdpt_idx] = (u32)1;
+    PD[pd_idx]     = (u32)2;
+    PT[pt_idx]     = (u32)3; // The final entry points to a physical memory frame.
 
     // Perform the page table walk.
     u32 frame = page_table_walk();

@@ -6,7 +6,7 @@
 int A[SIZE], B[SIZE], C[SIZE];
 
 __attribute__((noinline))
-void array_add(){
+void page_table_walk(){
 
    
    for (int i=0;i<SIZE; i++){
@@ -30,7 +30,7 @@ for (i=0;i<SIZE; i++){
       C[i] = 0;
     }
     
-array_add();
+page_table_walk();
 
 for (i=0;i<SIZE; i++) printf("%d\n", C[i]);
     

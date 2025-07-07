@@ -125,12 +125,7 @@ int main() {
 
     pa = frame + (va & 0xFFF); // Calculate the physical address based on the frame and offset.
 
-    // Check if the translation was successful (pa is not 0).
-    if (pa != 0) {
-        printf("Translated PA: 0x%lx\n", pa);
-    } else {
-        printf("Translation failed.\n");
-    }
+    printf("Translated PA: 0x%lx\n", pa);
 
     return 0;
 }

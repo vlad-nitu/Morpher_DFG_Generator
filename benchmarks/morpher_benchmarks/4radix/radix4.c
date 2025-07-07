@@ -60,7 +60,6 @@ void page_table_walk() {
             return;
         }
         current_table = (u64*)current_table[idx];
-        level--;
     }
 
     // PT level

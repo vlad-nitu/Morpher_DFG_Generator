@@ -78,11 +78,16 @@ u32 page_table_walk(void)
 #endif
         int i = idx[level];
 
-        switch (level) {                 /* DIRECT accesses */
-        case 3: frame = PML4[i]; PML4[i] = frame; break;
-        case 2: frame = PDPT[i]; PDPT[i] = frame; break;
-        case 1: frame = PD[i];   PD[i]   = frame; break;
-        case 0: frame = PT[i];   PT[i]   = frame; break;
+        if (level == 3) {                 /* DIRECT accesses */
+            frame = PML4[i]; PML4[i] = frame;
+        } else if (level == 2) { 
+            frame = PDPT[i]; PDPT[i] = frame;
+        }
+        else if (level == 1) { 
+            frame = PD[i];   PD[i]   = frame;
+        }
+        else if (level == 0) { 
+            frame = PT[i];   PT[i]   = frame;
         }
     }
 

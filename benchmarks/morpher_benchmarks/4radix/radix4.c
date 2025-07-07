@@ -57,85 +57,63 @@ void page_table_walk() {
 
     // Extract all necessary indexes from the virtual address first.
     // This makes the subsequent walk logic cleaner and less error-prone.
-    int pml4_idx = get_index(va, 3); // Index for the PML4 table
-    int pdpt_idx = get_index(va, 2); // Index for the PDPT table
-    int pd_idx   = get_index(va, 1); // Index for the PD table
-    int pt_idx   = get_index(va, 0); // Index for the PT table
+    int indexes[LEVELS]; // Array to store indexes for each level
+    indexes[3] = get_index(va, 3); // PML4 index
+    indexes[2] = get_index(va, 2); // PDPT index
+    indexes[1] = get_index(va, 1); // PD index
+    indexes[0] = get_index(va, 0); // PT index
 
 #ifdef DEBUG
     // Print the virtual address and extracted indexes for debugging.
     printf("VA: 0x%lx -> Indexes: PML4[%d], PDPT[%d], PD[%d], PT[%d]\n",
-           va, pml4_idx, pdpt_idx, pd_idx, pt_idx);
+           va, indexes[3], indexes[2], indexes[1], indexes[0]);
 #endif
 
-    u64 current_entry;    // Holds the entry read from the current page table.
-    u64* next_table_ptr; // Pointer to the next level's page table.
+    // Start the page table walk from the PML4 table.
+    u64* current_table_ptr = PML4;
 
-    // --- Level 4: PML4 (Page Map Level 4) ---
-    // Access the PML4 table using the extracted PML4 index.
-    current_entry = PML4[pml4_idx];
-    if (current_entry == 0) {
-#ifdef DEBUG
-        printf("PML4 miss: Entry is 0x0 at index %d\n", pml4_idx);
-#endif
-        return; // Translation failed, pa remains 0.
-    }
-    // The entry contains the base address of the next level table (PDPT).
-    next_table_ptr = (u64*)current_entry;
-
+    // Loop through the page table levels from PML4 (level 3) down to PD (level 1).
+    // The PT level (level 0) will be handled separately after the loop,
+    // as the original code intended.
+    for (int level = LEVELS - 1; level >= 1; --level) {
 #ifdef CGRA_COMPILER
-    // This macro is specific to your CGRA compiler to indicate a mappable region.
-    // It's placed here to signify that this stage of the walk should be mapped.
-    please_map_me();
+        // This macro is specific to your CGRA compiler to indicate a mappable region.
+        // It's placed here to signify that this stage of the walk should be mapped.
+        please_map_me();
 #endif
+        // Get the index for the current page table level.
+        int idx = indexes[level];
 
-    // --- Level 3: PDPT (Page Directory Pointer Table) ---
-    // Access the PDPT table using the extracted PDPT index.
-    current_entry = next_table_ptr[pdpt_idx];
-    if (current_entry == 0) {
+        // Check if the entry in the current page table is valid (non-zero).
+        if (current_table_ptr[idx] == 0) {
 #ifdef DEBUG
-        printf("PDPT miss: Entry is 0x0 at index %d\n", pdpt_idx);
+            printf("Level %d miss: Entry is 0x0 at index %d\n", level, idx);
 #endif
-        return;
+            return; // Translation failed, pa remains 0.
+        }
+        // Update current_table_ptr to point to the base address of the next level's table.
+        // The value stored in the current entry is the physical address of the next table.
+        current_table_ptr = (u64*)current_table_ptr[idx];
     }
-    // The entry contains the base address of the next level table (PD).
-    next_table_ptr = (u64*)current_entry;
 
-#ifdef CGRA_COMPILER
-    please_map_me();
-#endif
+    // After the loop, 'current_table_ptr' should now point to the base of the
+    // PT (Page Table) for the final lookup.
+    // Handle the PT level (level 0) lookup.
+    int pt_idx = indexes[0]; // Get the index for the PT level.
 
-    // --- Level 2: PD (Page Directory) ---
-    // Access the PD table using the extracted PD index.
-    current_entry = next_table_ptr[pd_idx];
-    if (current_entry == 0) {
-#ifdef DEBUG
-        printf("PD miss: Entry is 0x0 at index %d\n", pd_idx);
-#endif
-        return;
-    }
-    // The entry contains the base address of the next level table (PT).
-    next_table_ptr = (u64*)current_entry;
-
-#ifdef CGRA_COMPILER
-    please_map_me();
-#endif
-
-    // --- Level 1: PT (Page Table) ---
-    // Access the PT table using the extracted PT index.
-    current_entry = next_table_ptr[pt_idx];
-    if (current_entry == 0) {
+    // Check if the entry in the PT is valid.
+    if (current_table_ptr[pt_idx] == 0) {
 #ifdef DEBUG
         printf("PT miss: Entry is 0x0 at index %d\n", pt_idx);
 #endif
-        return;
+        return; // Translation failed.
     }
 
     // --- Final Physical Address Calculation ---
     // The last 12 bits of the virtual address form the page offset.
     u64 page_offset = va & 0xFFF;
-    // The 'current_entry' at this point holds the base physical frame address.
-    u64 frame_base = current_entry;
+    // The 'current_table_ptr[pt_idx]' holds the base physical frame address.
+    u64 frame_base = current_table_ptr[pt_idx];
     // Calculate the final physical address by adding the page offset to the frame base.
     pa = frame_base + page_offset;
 }

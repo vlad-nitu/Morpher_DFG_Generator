@@ -55,7 +55,6 @@ static inline int get_index(uint32_t va_addr, int level)
  * or sets pa to 0 if a page table miss occurs.
  */
 /* --------------------------------------------------- */
-__attribute__((noinline,optimize("O0")))  /* <<<<<<<<<<<<<< */
 void page_table_walk(void)
 {
     int idx[LEVELS];
@@ -65,7 +64,6 @@ void page_table_walk(void)
     idx[0]=get_index(va,0);
 
 
-    #pragma clang loop unroll(disable)        /* belt-and-braces */
     for (int level = LEVELS-1; level >= 0; --level) {
 #ifdef CGRA_COMPILER
         please_map_me();                 /* anchor for mapper */
@@ -117,8 +115,15 @@ int main() {
 
     // Perform the page table walk.
     page_table_walk();
+
     u32 pa = frame + (va & 0xFFF); // Calculate the physical address based on the frame and offset.
-    printf("Translated PA: 0x%lx\n", pa); // Calculate the physical address based on the frame and offset.
+    if (pa == 0) {
+        printf("Page table walk failed, physical address is 0.\n");
+        return -1; // Indicate failure if pa is still 0.
+    }
+    else {
+        printf("Translated PA: 0x%lx\n", pa); // Calculate the physical address based on the frame and offset.
+    }
 
     return 0;
 }

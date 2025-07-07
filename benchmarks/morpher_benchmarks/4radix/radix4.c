@@ -70,7 +70,7 @@ void page_table_walk() {
 #endif
 
     // Start the page table walk from the PML4 table.
-    u64* current_table_ptr = PML4;
+    u64 current_table_ptr[ENTRIES] = PML4;
 
     // Loop through the page table levels from PML4 (level 3) down to PD (level 1).
     // The PT level (level 0) will be handled separately after the loop,
@@ -115,7 +115,7 @@ void page_table_walk() {
     // The 'current_table_ptr[pt_idx]' holds the base physical frame address.
     u64 frame_base = current_table_ptr[pt_idx];
     // Calculate the final physical address by adding the page offset to the frame base.
-    pa = frame_base + page_offset;
+    // pa = frame_base + page_offset;
 }
 
 /**

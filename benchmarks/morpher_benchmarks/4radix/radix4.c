@@ -1,5 +1,5 @@
-#include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 
 // Define constants for page table entries, shift, and levels
 #define ENTRIES 512

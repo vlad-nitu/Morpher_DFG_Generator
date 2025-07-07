@@ -32,7 +32,7 @@ u64 physical_memory[1024];
 u64 va;
 u64 pa;
 
-u64 pte;
+u64 pte2, pte;
 
 /**
  * @brief Helper function to extract the index bits for a specific page table level
@@ -127,7 +127,7 @@ void page_table_walk() {
                 break;
         }
 
-        printf("Level %d: Index %d -> PTE 0x%lx\n", level, idx, pte); // Force reading PTE
+        pte2 = pte + 1; // Force access to PTE to ensure it is not optimized away.
 
         // Check for a page table miss at any level (except the very last step
         // where next_table_base_addr becomes the frame_base).

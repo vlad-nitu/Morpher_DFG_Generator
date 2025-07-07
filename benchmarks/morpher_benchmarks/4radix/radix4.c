@@ -55,6 +55,7 @@ static inline int get_index(uint32_t va_addr, int level)
  * or sets pa to 0 if a page table miss occurs.
  */
 /* --------------------------------------------------- */
+__attribute__((noinline))
 void page_table_walk(void)
 {
     int level = LEVELS - 1;

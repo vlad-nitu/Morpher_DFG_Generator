@@ -105,8 +105,10 @@ void page_table_walk() {
                 next_table_base_addr = ((u64*)next_table_base_addr)[idx];
                 break;
             default:
-                // Should not happen with valid 'LEVELS' and loop bounds
-                return;
+#ifdef DEBUG
+            printf("Should not happen with valid 'LEVELS' and loop bounds\n");
+#endif
+                break;
         }
 
         // Check for a page table miss at any level (except the very last step
@@ -117,7 +119,6 @@ void page_table_walk() {
 #ifdef DEBUG
             printf("Level %d miss: Entry is 0x0 at index %d\n", level, idx);
 #endif
-            return;
         }
     }
 

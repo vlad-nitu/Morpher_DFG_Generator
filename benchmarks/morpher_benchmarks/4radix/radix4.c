@@ -82,6 +82,9 @@ void page_table_walk(void)
         else if (level == 0) { 
             frame = PT[i];   PT[i]   = frame;
         }
+        else {
+            break;
+        }
     }
 
     // Assume PA given; 'frame' is global variable

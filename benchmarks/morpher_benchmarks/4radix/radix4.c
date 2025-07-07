@@ -31,6 +31,8 @@ u32 physical_memory[1024];
 // These are used globally as per the original code's intent.
 u32 va;
 u32 pa;
+u32 frame;
+
 
 #define PAGE_SHIFT 12      /* 4 KiB pages */
 #define LVL_BITS    4      /* 4 bits per level */
@@ -54,16 +56,8 @@ static inline int get_index(uint32_t va_addr, int level)
  */
 /* --------------------------------------------------- */
 __attribute__((noinline))
-u32 page_table_walk(void)
+void page_table_walk(void)
 {
-    u32 frame = 0;
-    /* ---- “self-copy” keeps every global live ---- */
-    PML4[0]=PML4[0]; PDPT[0]=PDPT[0];
-    PD[0]  =PD[0];   PT[0]  =PT[0];
-    physical_memory[0]=physical_memory[0];
-    va=va; pa=pa;
-    /* ---------------------------------------------- */
-
     int idx[LEVELS];
     idx[3]=get_index(va,3);
     idx[2]=get_index(va,2);
@@ -91,9 +85,8 @@ u32 page_table_walk(void)
         }
     }
 
-    // Assume pa given
+    // Assume PA given; 'frame' is global variable
     // pa = frame + (va & 0xFFF);
-    return frame;
 }
 
 /**
@@ -122,7 +115,7 @@ int main() {
     PT[pt_idx]     = (u32)3; // The final entry points to a physical memory frame.
 
     // Perform the page table walk.
-    u32 frame = page_table_walk();
+    page_table_walk();
     u32 pa = frame + (va & 0xFFF); // Calculate the physical address based on the frame and offset.
     printf("Translated PA: 0x%lx\n", pa); // Calculate the physical address based on the frame and offset.
 

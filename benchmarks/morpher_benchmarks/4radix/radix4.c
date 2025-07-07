@@ -59,14 +59,17 @@ __attribute__((noinline))
 void page_table_walk(void)
 {
 
-    for (volatile int level = LEVELS - 1; level >= 0; --level) {
+    for (int level = LEVELS - 1; level >= 0; --level) {
 #ifdef CGRA_COMPILER
         please_map_me();
 #endif
-        if (level == 3) { frame = PML4[get_index(va, level)];  }
-        else if (level == 2){ frame = PDPT[get_index(va, level)]; }
-        else if (level == 1){ frame = PD[get_index(va, level)]; }
-        else              { frame = PT[get_index(va, level)]; }
+
+        volatile int lvl = level;
+
+        if (lvl == 3) { frame = PML4[get_index(va, lvl)];  }
+        else if (lvl == 2){ frame = PDPT[get_index(va, lvl)]; }
+        else if (lvl == 1){ frame = PD[get_index(va, lvl)]; }
+        else              { frame = PT[get_index(va, lvl)]; }
     }
 
     // Assume PA given; 'frame' is global variable

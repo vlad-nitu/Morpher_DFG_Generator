@@ -38,8 +38,13 @@ u32 frame;
 #define LVL_BITS    4      /* 4 bits per level */
 #define LVL_MASK    0xF    /* 0b1111 */
 
+// --- Global helper vars ---
+int pml4_idx;
+int pdpt_idx;
+int pd_idx; 
+int pt_idx;  /* level: 0 = PT, 1 = PD, 2 = PDPT, 3 = PML4 */
+
 static inline int get_index(uint32_t va_addr, int level)
-/* level: 0 = PT, 1 = PD, 2 = PDPT, 3 = PML4 */
 {
     /* shift = 16 + 4*level
        level 0 → 16  (bits 19–16)
@@ -59,12 +64,21 @@ __attribute__((noinline))
 void page_table_walk()
 {
 
-    for (int i = 0; i < ENTRIES; ++i) {
-      #ifdef CGRA_COMPILER
-      please_map_me();
-      #endif
-        PML4[i] += PDPT[i] + PD[i] + PT[i]; // Simulate some operation on the page tables
+    for (int level = LEVELS - 1; level >= 0; --level) {
+#ifdef CGRA_COMPILER
+        please_map_me();
+#endif
+
+        volatile int lvl = level;
+
+        if (lvl == 3) { frame = PML4[pml4_idx];  }
+        else if (lvl == 2){ frame = PDPT[pdpt_idx]; }
+        else if (lvl == 1){ frame = PD[pd_idx]; }
+        else              { frame = PT[pt_idx]; }
     }
+
+    // Assume PA given; 'frame' is global variable
+    // pa = frame + (va & 0xFFF);
 }
 
 /**
@@ -72,14 +86,25 @@ void page_table_walk()
  * @return 0 on successful execution.
  */
 int main() {
-    
-    int i;
-    for (i=0;i<ENTRIES; i++){
-      PML4[i] = 0;
-      PDPT[i] = i * 2 + 5;
-      PD[i] = i * 3;
-      PT[i] = 3;
-    }
+    // Initialize pa to 0 at the start of main. This ensures a clean state
+    // before the page table walk is attempted.
+    pa = 0;
+
+    // Set an example virtual address.
+    // Using a longer address (64-bit) to ensure all page table levels are exercised.
+    va = 0xCAFEBABE;
+
+    // Get the indexes for setting up the simulated page table entries.
+    int pml4_idx = get_index(va, 3);
+    int pdpt_idx = get_index(va, 2);
+    int pd_idx   = get_index(va, 1);
+    int pt_idx   = get_index(va, 0);
+
+    // Setup simulated page table entries. -> Dummy data
+    PML4[pml4_idx] = (u32)0;
+    PDPT[pdpt_idx] = (u32)1;
+    PD[pd_idx]     = (u32)2;
+    PT[pt_idx]     = (u32)3; // The final entry points to a physical memory frame.
 
     // Perform the page table walk.
     page_table_walk();

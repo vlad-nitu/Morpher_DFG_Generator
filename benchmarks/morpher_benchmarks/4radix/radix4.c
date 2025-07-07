@@ -78,11 +78,11 @@ void page_table_walk() {
 
     // --- Start the page table walk loop from PML4 (level 3) down to PT (level 0) ---
     for (int level = LEVELS - 1; level >= 0; --level) {
-#ifdef CGRA_COMPILER
-        // This macro is specific to your CGRA compiler to indicate a mappable region.
-        // It's placed here to signify that this stage of the walk should be mapped.
-        please_map_me();
-#endif
+    // This macro is specific to your CGRA compiler to indicate a mappable region.
+    // It's placed here to signify that this stage of the walk should be mapped.
+    #ifdef CGRA_COMPILER
+    please_map_me();
+    #endif
 
         int idx = indexes[level]; // Get the index for the current level
 

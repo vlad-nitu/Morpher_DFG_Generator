@@ -63,28 +63,24 @@ void page_table_walk(void)
     idx[1]=get_index(va,1);
     idx[0]=get_index(va,0);
 
-
-    for (int level = LEVELS-1; level >= 0; --level) {
-#ifdef CGRA_COMPILER
-        please_map_me();                 /* anchor for mapper */
-#endif
-       volatile int level_vol = level;
-       int i = idx[level_vol];
-
-        if (level == 3) {                 /* DIRECT accesses */
-            frame = PML4[i]; PML4[i] = frame;
-        } else if (level == 2) { 
-            frame = PDPT[i]; PDPT[i] = frame;
-        }
-        else if (level == 1) { 
-            frame = PD[i];   PD[i]   = frame;
-        }
-        else if (level == 0) { 
-            frame = PT[i];   PT[i]   = frame;
-        }
-        else {
+    int level = LEVELS - 1;
+/* --- outer forever loop gives PartPred a real header --- */
+    while (1) {
+        if (level < 0)           /* ←– this branch must stay conditional */
             break;
-        }
+
+#ifdef CGRA_COMPILER
+        please_map_me();
+#endif
+        volatile int lvl = level;   /* prevents jump-table folding      */
+        int i = idx[lvl];
+
+        if (lvl == 3) { frame = PML4[i];  PML4[i]  = frame; }
+        else if (lvl == 2){ frame = PDPT[i]; PDPT[i] = frame; }
+        else if (lvl == 1){ frame = PD[i];   PD[i]   = frame; }
+        else              { frame = PT[i];   PT[i]   = frame; }
+
+        --level;                /* loop-variable update                */
     }
 
     // Assume PA given; 'frame' is global variable

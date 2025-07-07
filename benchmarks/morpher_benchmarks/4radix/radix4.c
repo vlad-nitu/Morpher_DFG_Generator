@@ -84,10 +84,6 @@ void page_table_walk() {
     va = va;
     pa = pa;
         
-    // This variable will hold the *physical address* of the next page table base.
-    // It is a u64, not a u64*, to avoid problematic casts and loss of array type info.
-    u64 next_table_base_addr;
-
 
 
     // --- Start the page table walk loop from PML4 (level 3) down to PT (level 0) ---
@@ -128,16 +124,6 @@ void page_table_walk() {
         }
 
         pte2 = pte + 1; // Force access to PTE to ensure it is not optimized away.
-
-        // Check for a page table miss at any level (except the very last step
-        // where next_table_base_addr becomes the frame_base).
-        // If it's the last level (PT), next_table_base_addr will be the frame_base,
-        // and a 0 value indicates a miss.
-        if (next_table_base_addr == 0) {
-#ifdef DEBUG
-            printf("Level %d miss: Entry is 0x0 at index %d\n", level, idx);
-#endif
-        }
     }
 
     // After the loop, 'next_table_base_addr' holds the physical frame base address.

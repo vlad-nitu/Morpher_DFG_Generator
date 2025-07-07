@@ -76,14 +76,14 @@ void page_table_walk() {
            va, indexes[3], indexes[2], indexes[1], indexes[0]);
 #endif
 
-    // // Force global references so LLVM IR exposes them to the DFG pass
-    // PML4[1] = PML4[1];
-    // PDPT[1] = PDPT[1];
-    // PD[1] = PD[1];
-    // PT[1] = PT[1];
-    // physical_memory[1] = physical_memory[1];
-    // va = va;
-    // pa = pa;
+    // Force global references so LLVM IR exposes them to the DFG pass
+    PML4[1] = PML4[1];
+    PDPT[1] = PDPT[1];
+    PD[1] = PD[1];
+    PT[1] = PT[1];
+    physical_memory[1] = physical_memory[1];
+    va = va;
+    pa = pa;
         
 
 
@@ -97,34 +97,15 @@ void page_table_walk() {
 
 
         int idx = indexes[level]; // Get the index for the current level
-
-        // Use a switch statement to explicitly access the correct global array
-        // based on the current 'level'. This ensures the compiler always knows
-        // the static type and size of the array being accessed.
-        switch (level) {
-            case 3: // PML4 level
+        
+        if (level == 3) {
                 pte = PML4[idx];
-                break;
-            case 2: // PDPT level
-                // The address 'next_table_base_addr' from the previous level (PML4)
-                // is now interpreted as the base of the PDPT table.
-                // We cast it to u64* *just for this access* to dereference it.
-                // The result is then stored back into next_table_base_addr (u64).
+        } else if (level == 2) {
                 pte = PDPT[idx];
-                break;
-            case 1: // PD level
-                // Similar to PDPT, interpret the address from PDPT as the base of PD.
+        } else if (level == 1) {
                 pte = PD[idx];
-                break;
-            case 0: // PT level (final lookup for physical frame)
-                // Interpret the address from PD as the base of PT.
-                pte = PT[idx];
-                break;
-            default:
-#ifdef DEBUG
-            printf("Should not happen with valid 'LEVELS' and loop bounds\n");
-#endif
-                break;
+        } else if (level == 0) {
+                pte = PT[idx];     
         }
 
         pte2 = pte + 1; // Force access to PTE to ensure it is not optimized away.

@@ -57,12 +57,6 @@ static inline int get_index(uint32_t va_addr, int level)
 /* --------------------------------------------------- */
 void page_table_walk(void)
 {
-    int idx[LEVELS];
-    idx[3]=get_index(va,3);
-    idx[2]=get_index(va,2);
-    idx[1]=get_index(va,1);
-    idx[0]=get_index(va,0);
-
     int level = LEVELS - 1;
 /* --- outer forever loop gives PartPred a real header --- */
     while (1) {
@@ -73,7 +67,8 @@ void page_table_walk(void)
         please_map_me();
 #endif
         volatile int lvl = level;   /* prevents jump-table folding      */
-        int i = idx[lvl];
+        int i = get_index(va, lvl);          /* ← direct call, no alloca   */
+
 
         if (lvl == 3) { frame = PML4[i];  PML4[i]  = frame; }
         else if (lvl == 2){ frame = PDPT[i]; PDPT[i] = frame; }

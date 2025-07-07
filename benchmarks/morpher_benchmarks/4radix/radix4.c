@@ -69,11 +69,9 @@ void page_table_walk()
         please_map_me();
 #endif
 
-        volatile int lvl = level;
-
-        if (lvl == 3) { frame = PML4[pml4_idx];  }
-        else if (lvl == 2){ frame = PDPT[pdpt_idx]; }
-        else if (lvl == 1){ frame = PD[pd_idx]; }
+        if (level == 3) { frame = PML4[pml4_idx];  }
+        else if (level == 2){ frame = PDPT[pdpt_idx]; }
+        else if (level == 1){ frame = PD[pd_idx]; }
         else              { frame = PT[pt_idx]; }
     }
 

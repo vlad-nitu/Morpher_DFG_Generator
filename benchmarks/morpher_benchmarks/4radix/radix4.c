@@ -33,6 +33,12 @@ u32 va;
 u32 pa;
 u32 frame;
 
+/* one global pointer per level – never in a PHI */
+static u32 *pml4_base = PML4;
+static u32 *pdpt_base = PDPT;
+static u32 *pd_base   = PD;
+static u32 *pt_base   = PT;
+
 
 #define PAGE_SHIFT 12      /* 4 KiB pages */
 #define LVL_BITS    4      /* 4 bits per level */
@@ -69,10 +75,10 @@ void page_table_walk()
         please_map_me();
 #endif
 
-        if (level == 3) { frame = PML4[pml4_idx];  }
-        else if (level == 2){ frame = PDPT[pdpt_idx]; }
-        else if (level == 1){ frame = PD[pd_idx]; }
-        else              { frame = PT[pt_idx]; }
+        if (level == 3) { frame = pml4_base[pml4_idx];  }
+        else if (level == 2){ frame = pdpt_base[pdpt_idx]; }
+        else if (level == 1){ frame = pd_base[pd_idx]; }
+        else              { frame = pt_base[pt_idx]; }
     }
 
     // Assume PA given; 'frame' is global variable

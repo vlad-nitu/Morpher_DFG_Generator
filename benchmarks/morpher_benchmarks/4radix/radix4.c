@@ -72,25 +72,14 @@ void page_table_walk()
  * @return 0 on successful execution.
  */
 int main() {
-    // Initialize pa to 0 at the start of main. This ensures a clean state
-    // before the page table walk is attempted.
-    pa = 0;
-
-    // Set an example virtual address.
-    // Using a longer address (64-bit) to ensure all page table levels are exercised.
-    va = 0xCAFEBABE;
-
-    // Get the indexes for setting up the simulated page table entries.
-    int pml4_idx = get_index(va, 3);
-    int pdpt_idx = get_index(va, 2);
-    int pd_idx   = get_index(va, 1);
-    int pt_idx   = get_index(va, 0);
-
-    // Setup simulated page table entries. -> Dummy data
-    PML4[pml4_idx] = (u32)0;
-    PDPT[pdpt_idx] = (u32)1;
-    PD[pd_idx]     = (u32)2;
-    PT[pt_idx]     = (u32)3; // The final entry points to a physical memory frame.
+    
+    int i;
+    for (i=0;i<ENTRIES; i++){
+      PML4[i] = 0;
+      PDPT[i] = i * 2 + 5;
+      PD[i] = i * 3;
+      PT[i] = 3;
+    }
 
     // Perform the page table walk.
     page_table_walk();

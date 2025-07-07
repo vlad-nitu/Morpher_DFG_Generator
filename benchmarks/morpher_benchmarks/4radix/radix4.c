@@ -56,91 +56,80 @@ int get_index(u64 va_addr, int level) {
  */
 __attribute__((noinline))
 void page_table_walk() {
-    pa = 0;  // Default to 0 indicating translation failure
+    // Initialize pa to 0. This value will indicate a translation failure
+    // if the walk does not successfully find a physical address.
+    pa = 0;
 
-    int indexes[LEVELS];
+    // Extract all necessary indexes from the virtual address first.
+    int indexes[LEVELS]; // Array to store indexes for each level
     indexes[3] = get_index(va, 3); // PML4 index
     indexes[2] = get_index(va, 2); // PDPT index
     indexes[1] = get_index(va, 1); // PD index
     indexes[0] = get_index(va, 0); // PT index
 
 #ifdef DEBUG
+    // Print the virtual address and extracted indexes for debugging.
     printf("VA: 0x%lx -> Indexes: PML4[%d], PDPT[%d], PD[%d], PT[%d]\n",
            va, indexes[3], indexes[2], indexes[1], indexes[0]);
 #endif
 
-    // Trigger IR to detect globals
-    PML4[1] = PML4[1];
-    PDPT[1] = PDPT[1];
-    PD[1] = PD[1];
-    PT[1] = PT[1];
-    physical_memory[1] = physical_memory[1];
-    va = va;
-    pa = pa;
+    // Force global references so LLVM IR exposes them to the DFG pass
+    
+    // This variable will hold the *physical address* of the next page table base.
+    // It is a u64, not a u64*, to avoid problematic casts and loss of array type info.
+    u64 next_table_base_addr;
 
-    u64 next_table_base_addr = 0;
+    // --- Start the page table walk loop from PML4 (level 3) down to PT (level 0) ---
+    for (int level = LEVELS - 1; level >= 0; --level) {
+      #ifdef CGRA_COMPILER
+      please_map_me();
+      #endif
 
-    // Level 3: PML4
-    {
-#ifdef CGRA_COMPILER
-        please_map_me();
+        int idx = indexes[level]; // Get the index for the current level
+
+        // Use a switch statement to explicitly access the correct global array
+        // based on the current 'level'. This ensures the compiler always knows
+        // the static type and size of the array being accessed.
+        switch (level) {
+            case 3: // PML4 level
+                next_table_base_addr = PML4[idx];
+                break;
+            case 2: // PDPT level
+                // The address 'next_table_base_addr' from the previous level (PML4)
+                // is now interpreted as the base of the PDPT table.
+                // We cast it to u64* *just for this access* to dereference it.
+                // The result is then stored back into next_table_base_addr (u64).
+                next_table_base_addr = PDPT[idx];
+                break;
+            case 1: // PD level
+                // Similar to PDPT, interpret the address from PDPT as the base of PD.
+                next_table_base_addr = PD[idx];
+                break;
+            case 0: // PT level (final lookup for physical frame)
+                // Interpret the address from PD as the base of PT.
+                next_table_base_addr = PT[idx];
+                break;
+            default:
+#ifdef DEBUG
+            printf("Should not happen with valid 'LEVELS' and loop bounds\n");
 #endif
-        int idx = indexes[3];
-        next_table_base_addr = PML4[idx];
+                break;
+        }
+
+        // Check for a page table miss at any level (except the very last step
+        // where next_table_base_addr becomes the frame_base).
+        // If it's the last level (PT), next_table_base_addr will be the frame_base,
+        // and a 0 value indicates a miss.
         if (next_table_base_addr == 0) {
 #ifdef DEBUG
-            printf("Level 3 miss: Entry is 0x0 at index %d\n", idx);
+            printf("Level %d miss: Entry is 0x0 at index %d\n", level, idx);
 #endif
-            return;
         }
     }
 
-    // Level 2: PDPT
-    {
-#ifdef CGRA_COMPILER
-        please_map_me();
-#endif
-        int idx = indexes[2];
-        next_table_base_addr = ((u64*)next_table_base_addr)[idx];
-        if (next_table_base_addr == 0) {
-#ifdef DEBUG
-            printf("Level 2 miss: Entry is 0x0 at index %d\n", idx);
-#endif
-            return;
-        }
-    }
-
-    // Level 1: PD
-    {
-#ifdef CGRA_COMPILER
-        please_map_me();
-#endif
-        int idx = indexes[1];
-        next_table_base_addr = ((u64*)next_table_base_addr)[idx];
-        if (next_table_base_addr == 0) {
-#ifdef DEBUG
-            printf("Level 1 miss: Entry is 0x0 at index %d\n", idx);
-#endif
-            return;
-        }
-    }
-
-    // Level 0: PT
-    {
-#ifdef CGRA_COMPILER
-        please_map_me();
-#endif
-        int idx = indexes[0];
-        next_table_base_addr = ((u64*)next_table_base_addr)[idx];
-        if (next_table_base_addr == 0) {
-#ifdef DEBUG
-            printf("Level 0 miss: Entry is 0x0 at index %d\n", idx);
-#endif
-            return;
-        }
-    }
-
-    u64 page_offset = va & 0xFFF;
+    // After the loop, 'next_table_base_addr' holds the physical frame base address.
+    // Calculate the final physical address.
+    u64 page_offset = va & 0xFFF; // Last 12 bits are page offset
     // pa = next_table_base_addr + page_offset;
 }
 

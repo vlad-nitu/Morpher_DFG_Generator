@@ -32,6 +32,8 @@ u64 physical_memory[1024];
 u64 va;
 u64 pa;
 
+u64 pte;
+
 /**
  * @brief Helper function to extract the index bits for a specific page table level
  * from a given virtual address.
@@ -74,10 +76,19 @@ void page_table_walk() {
 #endif
 
     // Force global references so LLVM IR exposes them to the DFG pass
-    
+    PML4[1] = PML4[1];
+    PDPT[1] = PDPT[1];
+    PD[1] = PD[1];
+    PT[1] = PT[1];
+    physical_memory[1] = physical_memory[1];
+    va = va;
+    pa = pa;
+        
     // This variable will hold the *physical address* of the next page table base.
     // It is a u64, not a u64*, to avoid problematic casts and loss of array type info.
     u64 next_table_base_addr;
+
+
 
     // --- Start the page table walk loop from PML4 (level 3) down to PT (level 0) ---
     for (int level = LEVELS - 1; level >= 0; --level) {
@@ -92,22 +103,22 @@ void page_table_walk() {
         // the static type and size of the array being accessed.
         switch (level) {
             case 3: // PML4 level
-                next_table_base_addr = PML4[idx];
+                pte = PML4[idx];
                 break;
             case 2: // PDPT level
                 // The address 'next_table_base_addr' from the previous level (PML4)
                 // is now interpreted as the base of the PDPT table.
                 // We cast it to u64* *just for this access* to dereference it.
                 // The result is then stored back into next_table_base_addr (u64).
-                next_table_base_addr = PDPT[idx];
+                pte = PDPT[idx];
                 break;
             case 1: // PD level
                 // Similar to PDPT, interpret the address from PDPT as the base of PD.
-                next_table_base_addr = PD[idx];
+                pte = PD[idx];
                 break;
             case 0: // PT level (final lookup for physical frame)
                 // Interpret the address from PD as the base of PT.
-                next_table_base_addr = PT[idx];
+                pte = PT[idx];
                 break;
             default:
 #ifdef DEBUG
@@ -115,6 +126,8 @@ void page_table_walk() {
 #endif
                 break;
         }
+
+        printf("Level %d: Index %d -> PTE 0x%lx\n", level, idx, pte); // Force reading PTE
 
         // Check for a page table miss at any level (except the very last step
         // where next_table_base_addr becomes the frame_base).

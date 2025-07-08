@@ -1,0 +1,5 @@
+var_name,base_addr
+idx,0
+PTBL,16384
+loopend,32767
+loopstart,65534

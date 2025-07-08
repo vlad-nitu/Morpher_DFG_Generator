@@ -49,16 +49,6 @@ int pdpt_idx;
 int pd_idx; 
 int pt_idx;  /* level: 0 = PT, 1 = PD, 2 = PDPT, 3 = PML4 */
 
-static inline int get_index(uint32_t va_addr, int level)
-{
-    /* shift = 16 + 4*level
-       level 0 → 16  (bits 19–16)
-       level 1 → 20  (bits 23–20)
-       level 2 → 24  (bits 27–24)
-       level 3 → 28  (bits 31–28) */
-    return (va_addr >> (16 + LVL_BITS * level)) & LVL_MASK;
-}
-
 /**
  * @brief Performs a simulated page table walk for the global virtual address (va).
  * Updates the global physical address (pa) upon successful translation,

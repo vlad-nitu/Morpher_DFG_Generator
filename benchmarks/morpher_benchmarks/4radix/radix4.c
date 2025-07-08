@@ -23,8 +23,7 @@ void page_table_walk(void)
 
         // PTBL[cur_lvl][ idx[cur_lvl] ] += 1;
         x = PTBL[cur_lvl][ idx[cur_lvl] ];       /* pure 32-bit GEP + load/store */
-        PTBL[cur_lvl][ idx[cur_lvl] ] = x + 1;       /* pure 32-bit GEP + load/store */
-        // PTBL[cur_lvl][ idx[cur_lvl] ] = ((x << 4) + 0xab) & 0xffffffff;  // Perform a dummy store + index calculation operation
+        PTBL[cur_lvl][ idx[cur_lvl] ] = ((x << 4) + 0xab) & 0xffffffff;  // Perform a dummy store + index calculation operation
     }
 }
 

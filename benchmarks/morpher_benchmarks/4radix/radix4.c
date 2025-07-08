@@ -20,6 +20,8 @@ void page_table_walk(void)
 #ifdef CGRA_COMPILER
         please_map_me();                  /* exactly one token */
 #endif
+
+        // PTBL[cur_lvl][ idx[cur_lvl] ] += 1;
         x = PTBL[cur_lvl][ idx[cur_lvl] ];       /* pure 32-bit GEP + load/store */
         PTBL[cur_lvl][ idx[cur_lvl] ] = ((x << 4) + 0xab) & 0xffffffff;  // Perform a dummy store + index calculation operation
     }

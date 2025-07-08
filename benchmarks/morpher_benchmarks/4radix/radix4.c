@@ -11,9 +11,6 @@ static u32 PTBL[LVLS][ENTRIES];
 /* index table (filled once in main) */
 static int idx[LVLS];
 
-static volatile int cur_lvl;        /* global → pointer *is* a GEP */
-
-
 /* -------------------------------------------------- */
 /* loop kept exactly as written (no unroll, no peel)  */
 #if defined(__clang__)
@@ -27,13 +24,11 @@ __attribute__((noinline)) NO_OPT
 void page_table_walk(void)
 {
     /* loop uses a single base @PTBL: no PHI-of-arrays possible */
-    cur_lvl = 3;
-    while (cur_lvl >= 0) {
+    for (int cur_lvl = 3; cur_lvl >= 0; cur_lvl --) {
 #ifdef CGRA_COMPILER
         please_map_me();                  /* exactly one token */
 #endif
         PTBL[cur_lvl][ idx[cur_lvl] ] += 1;       /* pure 32-bit GEP + load/store */
-        cur_lvl --;
     }
 }
 

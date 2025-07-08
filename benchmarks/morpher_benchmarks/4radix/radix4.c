@@ -10,6 +10,7 @@ static u32 PTBL[LVLS][ENTRIES];
 
 /* index table (filled once in main) */
 static int idx[LVLS];
+static u32 x; // Global variable to hold the value loaded from the page table
 
 __attribute__((noinline))
 void page_table_walk(void)
@@ -19,7 +20,7 @@ void page_table_walk(void)
 #ifdef CGRA_COMPILER
         please_map_me();                  /* exactly one token */
 #endif
-        u32 x = PTBL[cur_lvl][ idx[cur_lvl] ];       /* pure 32-bit GEP + load/store */
+        x = PTBL[cur_lvl][ idx[cur_lvl] ];       /* pure 32-bit GEP + load/store */
         PTBL[LVLS - 1][ ENTRIES - 1 ] = ((x << 4) + 0xab) & 0xffffffff;  // Perform a dummy store + index calculation operation
     }
 }

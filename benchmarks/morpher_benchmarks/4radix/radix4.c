@@ -67,21 +67,24 @@ static inline int get_index(uint32_t va_addr, int level)
  */
 /* --------------------------------------------------- */
 __attribute__((noinline))
-void page_table_walk(void)
+void page_table_walk()
 {
-    /* capture globals once – now they live in registers, not memory */
-    int l3 = pml4_idx;
-    int l2 = pdpt_idx;
-    int l1 = pd_idx;
-    int l0 = pt_idx;
 
-    volatile int one = 1;            /* keeps the loop in the IR */
+    for (int level = LEVELS - 1; level >= 0; --level) {
+#ifdef CGRA_COMPILER
+        please_map_me();
+#endif
 
-    for (int i=0;i<one;++i) { please_map_me(); frame = PML4[l3]; }
-    for (int i=0;i<one;++i) { please_map_me(); frame = PDPT[l2]; }
-    for (int i=0;i<one;++i) { please_map_me(); frame = PD[l1];   }
-    for (int i=0;i<one;++i) { please_map_me(); frame = PT[l0];   }
+        if (level == 3) { frame = pml4_base[pml4_idx];   }
+        else if (level == 2) { frame = pdpt_base[pdpt_idx];   }
+        else if (level == 1) { frame = pd_base[pd_idx];       }
+        else { frame = PT[pt_idx];          /* level == 0 */
+        }
 
+    }
+
+    // Assume PA given; 'frame' is global variable
+    // pa = frame + (va & 0xFFF);
 }
 
 /**

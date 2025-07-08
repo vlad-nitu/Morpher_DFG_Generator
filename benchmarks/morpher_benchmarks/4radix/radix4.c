@@ -69,12 +69,18 @@ static inline int get_index(uint32_t va_addr, int level)
 __attribute__((noinline))
 void page_table_walk(void)
 {
-    volatile int one = 1;        /* keeps each loop in the IR          */
+    /* capture globals once – now they live in registers, not memory */
+    int l3 = pml4_idx;
+    int l2 = pdpt_idx;
+    int l1 = pd_idx;
+    int l0 = pt_idx;
 
-    for (int i=0;i<one;++i) { please_map_me(); frame = PML4[pml4_idx]; }
-    for (int i=0;i<one;++i) { please_map_me(); frame = PDPT[pdpt_idx]; }
-    for (int i=0;i<one;++i) { please_map_me(); frame = PD[pd_idx];     }
-    for (int i=0;i<one;++i) { please_map_me(); frame = PT[pt_idx];     }
+    volatile int one = 1;            /* keeps the loop in the IR */
+
+    for (int i=0;i<one;++i) { please_map_me(); frame = PML4[l3]; }
+    for (int i=0;i<one;++i) { please_map_me(); frame = PDPT[l2]; }
+    for (int i=0;i<one;++i) { please_map_me(); frame = PD[l1];   }
+    for (int i=0;i<one;++i) { please_map_me(); frame = PT[l0];   }
 
 }
 

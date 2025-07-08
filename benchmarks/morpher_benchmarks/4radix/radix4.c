@@ -21,7 +21,7 @@ void page_table_walk(void)
         please_map_me();                  /* exactly one token */
 #endif
         x = PTBL[cur_lvl][ idx[cur_lvl] ];       /* pure 32-bit GEP + load/store */
-        PTBL[LVLS - 1][ ENTRIES - 1 ] = ((x << 4) + 0xab) & 0xffffffff;  // Perform a dummy store + index calculation operation
+        PTBL[cur_lvl][ idx[cur_lvl] ] = ((x << 4) + 0xab) & 0xffffffff;  // Perform a dummy store + index calculation operation
     }
 }
 

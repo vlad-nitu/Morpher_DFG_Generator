@@ -19,7 +19,8 @@ void page_table_walk(void)
 #ifdef CGRA_COMPILER
         please_map_me();                  /* exactly one token */
 #endif
-        PTBL[cur_lvl][ idx[cur_lvl] ] += 1;       /* pure 32-bit GEP + load/store */
+        u32 x = PTBL[cur_lvl][ idx[cur_lvl] ];       /* pure 32-bit GEP + load/store */
+        (void)x;
     }
 }
 

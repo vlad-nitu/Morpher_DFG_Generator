@@ -115,14 +115,14 @@ int main() {
     // Perform the page table walk.
     page_table_walk();
 
-    u32 pa = frame + (va & 0xFFF); // Calculate the physical address based on the frame and offset.
-    if (pa == 0) {
-        printf("Page table walk failed, physical address is 0.\n");
-        return -1; // Indicate failure if pa is still 0.
-    }
-    else {
-        printf("Translated PA: 0x%lx\n", pa); // Calculate the physical address based on the frame and offset.
-    }
+    // u32 pa = frame + (va & 0xFFF); // Calculate the physical address based on the frame and offset.
+    // if (pa == 0) {
+    //     printf("Page table walk failed, physical address is 0.\n");
+    //     return -1; // Indicate failure if pa is still 0.
+    // }
+    // else {
+    //     printf("Translated PA: 0x%lx\n", pa); // Calculate the physical address based on the frame and offset.
+    // }
 
     return 0;
 }

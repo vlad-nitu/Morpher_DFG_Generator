@@ -73,10 +73,10 @@ void page_table_walk()
 #ifdef CGRA_COMPILER
         please_map_me();
 #endif
-
-        if (level == 3) { PML4[pml4_idx] += 1;   }
-        else if (level == 2) {  PDPT[pdpt_idx] += 1;   }
-        else if (level == 1) {  PD[pd_idx] += 1;       }
+        int lvl = level;
+        if (lvl == 3) { PML4[pml4_idx] += 1;   }
+        else if (lvl == 2) {  PDPT[pdpt_idx] += 1;   }
+        else if (lvl == 1) {  PD[pd_idx] += 1;       }
         else { PT[pt_idx] += 1;          /* level == 0 */
         }
 

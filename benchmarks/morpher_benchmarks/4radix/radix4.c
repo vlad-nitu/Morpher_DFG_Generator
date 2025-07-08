@@ -77,7 +77,7 @@ void page_table_walk()
         if (level == 3) { pml4_base[pml4_idx] += 1;   }
         else if (level == 2) {  pdpt_base[pdpt_idx] += 1;   }
         else if (level == 1) {  pd_base[pd_idx] += 1;       }
-        else { PT[pt_idx] += 1;          /* level == 0 */
+        else { pt_base[pt_idx] += 1;          /* level == 0 */
         }
 
     }

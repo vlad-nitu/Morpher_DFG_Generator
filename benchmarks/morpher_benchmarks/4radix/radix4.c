@@ -74,10 +74,10 @@ void page_table_walk()
         please_map_me();
 #endif
 
-        if (level == 3) { pml4_base[pml4_idx] += 1;   }
-        else if (level == 2) {  pdpt_base[pdpt_idx] += 1;   }
-        else if (level == 1) {  pd_base[pd_idx] += 1;       }
-        else { pt_base[pt_idx] += 1;          /* level == 0 */
+        if (level == 3) { PML4[pml4_idx] += 1;   }
+        else if (level == 2) {  PDPT[pdpt_idx] += 1;   }
+        else if (level == 1) {  PD[pd_idx] += 1;       }
+        else { PT[pt_idx] += 1;          /* level == 0 */
         }
 
     }

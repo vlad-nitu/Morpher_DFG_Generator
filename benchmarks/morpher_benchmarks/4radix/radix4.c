@@ -11,16 +11,18 @@ static u32 PTBL[LVLS][ENTRIES];
 /* index table (filled once in main) */
 static int idx[LVLS];
 
-/* -------------------------------------------------- */
-/* loop kept exactly as written (no unroll, no peel)  */
-#if defined(__clang__)
-#  define NO_OPT  __attribute__((optnone))
-#else                    /* GCC ≥4.4 */
-#  define NO_OPT  __attribute__((optimize("O0")))
-#endif
-/* -------------------------------------------------- */
 
-__attribute__((noinline)) NO_OPT
+/* ---------------  compile hints --------------- */
+/* O1 → mem2reg runs, no allocas.                 */
+/* no-unroll / no-vectorize keep the loop header. */
+#if defined(__clang__)
+#  define KEEP_LOOP  __attribute__((optimize("O1", "-fno-unroll-loops", "-fno-vectorize")))
+#else
+#  define KEEP_LOOP  __attribute__((optimize("O1", "no-tree-vectorize", "no-unroll-loops")))
+#endif
+/* ---------------------------------------------- */
+
+__attribute__((noinline)) KEEP_LOOP
 void page_table_walk(void)
 {
     /* loop uses a single base @PTBL: no PHI-of-arrays possible */

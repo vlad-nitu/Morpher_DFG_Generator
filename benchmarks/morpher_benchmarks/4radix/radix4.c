@@ -70,7 +70,7 @@ __attribute__((noinline))
 void page_table_walk()
 {
 
-    for (int level = LEVELS - 1; level >= 0; --level) {
+    for (volatile int level = LEVELS - 1; level >= 0; --level) {
 #ifdef CGRA_COMPILER
         please_map_me();
 #endif

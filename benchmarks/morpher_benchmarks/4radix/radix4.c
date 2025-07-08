@@ -78,7 +78,8 @@ void page_table_walk()
         if (level == 3) { frame = pml4_base[pml4_idx]; continue;  }
         if (level == 2) { frame = pdpt_base[pdpt_idx]; continue;  }
         if (level == 1) { frame = pd_base[pd_idx];     continue;  }
-        if (level == 0) { frame = pt_base[pt_idx];     continue;  }
+        frame = PT[pt_idx];          /* level == 0 */
+
     }
 
     // Assume PA given; 'frame' is global variable

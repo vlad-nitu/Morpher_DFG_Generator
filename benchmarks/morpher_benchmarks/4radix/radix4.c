@@ -69,18 +69,13 @@ static inline int get_index(uint32_t va_addr, int level)
 __attribute__((noinline))
 void page_table_walk(void)
 {
-    volatile int lvl = 3;            /* lives in memory -> data-dependent */
-    while (lvl >= 0) {               /* compiler must keep the test      */
-#ifdef CGRA_COMPILER
-        please_map_me();
-#endif
-        if (lvl == 3) { frame = PML4[pml4_idx]; }
-        else if (lvl == 2) { frame = PDPT[pdpt_idx]; }
-        else if (lvl == 1) { frame = PD[pd_idx]; }
-        else { frame = PT[pt_idx]; }
+    volatile int one = 1;        /* keeps each loop in the IR          */
 
-        --lvl;
-    }
+    for (int i=0;i<one;++i) { please_map_me(); frame = PML4[pml4_idx]; }
+    for (int i=0;i<one;++i) { please_map_me(); frame = PDPT[pdpt_idx]; }
+    for (int i=0;i<one;++i) { please_map_me(); frame = PD[pd_idx];     }
+    for (int i=0;i<one;++i) { please_map_me(); frame = PT[pt_idx];     }
+
 }
 
 /**

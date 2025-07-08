@@ -11,7 +11,7 @@ static u32 PTBL[LVLS][ENTRIES];
 /* index table (filled once in main) */
 static int idx[LVLS];
 
-__attribute__((noinline,optnone))          /* keep loop + header intact */
+__attribute__((noinline))          /* keep loop + header intact */
 void page_table_walk(void)
 {
     /* loop uses a single base @PTBL: no PHI-of-arrays possible */

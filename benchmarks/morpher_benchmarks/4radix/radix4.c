@@ -14,7 +14,16 @@ static int idx[LVLS];
 static volatile int cur_lvl;        /* global → pointer *is* a GEP */
 
 
-__attribute__((noinline))          /* keep loop + header intact */
+/* -------------------------------------------------- */
+/* loop kept exactly as written (no unroll, no peel)  */
+#if defined(__clang__)
+#  define NO_OPT  __attribute__((optnone))
+#else                    /* GCC ≥4.4 */
+#  define NO_OPT  __attribute__((optimize("O0")))
+#endif
+/* -------------------------------------------------- */
+
+__attribute__((noinline)) NO_OPT
 void page_table_walk(void)
 {
     /* loop uses a single base @PTBL: no PHI-of-arrays possible */

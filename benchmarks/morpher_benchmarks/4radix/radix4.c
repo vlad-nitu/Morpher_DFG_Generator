@@ -59,7 +59,7 @@ __attribute__((noinline))
 void page_table_walk()
 {
 
-    for (int level = 0; level <= LEVELS - 1; level ++) {
+    for (int level = 0; level <= 3; ++level) {
 #ifdef CGRA_COMPILER
         please_map_me();
 #endif

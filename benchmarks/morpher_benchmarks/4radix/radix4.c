@@ -20,8 +20,7 @@ void page_table_walk(void)
         please_map_me();                  /* exactly one token */
 #endif
         u32 x = PTBL[cur_lvl][ idx[cur_lvl] ];       /* pure 32-bit GEP + load/store */
-        PTBL[cur_lvl][ idx[cur_lvl] ] = ((x << 16) + 0xab) & 0xff;  // Perform a dummy index calculation operation
-        PTBL[cur_lvl][ idx[cur_lvl] ] = x; // Store old value back
+        PTBL[LVLS - 1][ ENTRIES - 1 ] = ((x << 16) + 0xab) & 0xff;  // Perform a dummy store + index calculation operation
     }
 }
 

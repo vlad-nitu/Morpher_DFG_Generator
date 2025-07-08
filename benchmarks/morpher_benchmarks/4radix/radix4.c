@@ -75,10 +75,10 @@ void page_table_walk()
         please_map_me();
 #endif
 
-        if (level == 3) { frame = pml4_base[pml4_idx];  }
-        else if (level == 2){ frame = pdpt_base[pdpt_idx]; }
-        else if (level == 1){ frame = pd_base[pd_idx]; }
-        else              { frame = pt_base[pt_idx]; }
+        if (level == 3) { frame = pml4_base[pml4_idx]; continue;  }
+        if (level == 2) { frame = pdpt_base[pdpt_idx]; continue;  }
+        if (level == 1) { frame = pd_base[pd_idx];     continue;  }
+        if (level == 0) { frame = pt_base[pt_idx];     continue;  }
     }
 
     // Assume PA given; 'frame' is global variable
